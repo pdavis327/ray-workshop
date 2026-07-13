@@ -1,4 +1,4 @@
-# 2. Ray Data on the cluster (CodeFlare)
+# 2. Ephemeral RayJob — Ray Data
 
 <p align="center">
 <a href="/docs/01-workbench-smoke-test.md">Prev</a>
@@ -8,19 +8,24 @@
 
 ### Objectives (~25 min)
 
-- Submit a **RayJob** from the workbench using the CodeFlare SDK.
-- Run distributed Ray Data ETL on KubeRay-managed workers.
+- Submit an ephemeral RayJob with `RayJob` + `ManagedClusterConfig` (official workflow 3).
+- Run the same `scale_data.py` script on a KubeRay-managed cluster.
+
+Reference: [Ephemeral cluster: self-service automated jobs](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue#the_ephemeral_cluster__self_service__automated_jobs) and [Running Ray workloads from Jupyter](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/running-ray-based-distributed-workloads_distributed-workloads).
 
 ### Hands-on
 
 1. Open `extras/notebooks/02-ray-data-rayjob.ipynb`.
-2. Set `OPENSHIFT_SERVER` and `OPENSHIFT_TOKEN` in the auth cell.
+2. Set token and server in the auth cell (or use env vars).
 3. Run all cells.
 
-### What the notebook does
+### Pattern (official)
 
 ```python
-from codeflare_sdk import RayJob, ManagedClusterConfig
+from codeflare_sdk import RayJob, ManagedClusterConfig, TokenAuthentication
+
+auth = TokenAuthentication(token="...", server="...", skip_tls=False)
+auth.login()
 
 job = RayJob(
     job_name="ray-workshop-scale-data",
@@ -29,33 +34,29 @@ job = RayJob(
     namespace="ray-workshop",
     local_queue="ray-workshop-queue",
     runtime_env={
-        "working_dir": "<cloned-repo>",
+        "working_dir": "<repo>",
         "pip": ["pyarrow", "pandas"],
         "env_vars": {"INPUT_PATH": "extras/data/iris.csv", ...},
     },
 )
 job.submit()
+job.status()
+job.logs()
 ```
 
-KubeRay creates the cluster, Ray packages your repo to workers, and the job tears down when finished.
+KubeRay creates the cluster, runs the job, and deletes the cluster when finished.
 
 ### Demo talking points
 
-- Data scientist never wrote Kubernetes YAML.
-- **Kueue** admitted the job to the `ray-workshop-queue`.
-- Same OpenShift AI project, enterprise quotas, audit trail in `oc get rayjob`.
+- Data scientist defines resources inline — no Kubernetes YAML.
+- Kueue admits the job when `ClusterQueue` quota allows.
+- Same script as Topic 1; only execution location changes.
 
 ### Checklist
 
 - [ ] `job.submit()` succeeds.
-- [ ] `wait_for_rayjob` reports `SUCCEEDED` (or RayJob shows complete in console).
-- [ ] Head pod logs contain `Done. Wrote N parquet file(s)`.
-
-### Under the hood (show briefly)
-
-```sh
-oc get rayjob ray-workshop-scale-data -n ray-workshop
-```
+- [ ] `job.status()` reaches a terminal success state.
+- [ ] `job.logs()` contains `Done. Wrote N parquet file(s)`.
 
 <p align="center">
 <a href="/docs/01-workbench-smoke-test.md">Prev</a>

@@ -1,41 +1,51 @@
 # Quick troubleshooting
 
-## CodeFlare auth fails
+Official: [Troubleshooting distributed workloads for users](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/troubleshooting-common-problems-with-distributed-workloads-for-users_distributed-workloads).
 
-- Regenerate token: `oc whoami --show-token`
-- Confirm server URL: `oc whoami --show-server`
-- Self-signed clusters: notebooks use `skip_tls=True` in `workshop_common.login()`
+## Workbench creation
 
-## RayJob stuck in Pending
+No hardware profiles in a Kueue-managed project:
+
+- Set `disableKueue: false` in OdhDashboardConfig
+- Create/enable a hardware profile with Local queue allocation pointing at a LocalQueue in the project
+
+## CodeFlare auth
+
+```sh
+oc whoami --show-server
+oc whoami --show-token
+```
+
+Use `skip_tls=False` by default. For self-signed clusters: `export RAY_WORKSHOP_SKIP_TLS=true`.
+
+## RayJob stuck
 
 ```sh
 oc describe rayjob <name> -n ray-workshop
-oc get events -n ray-workshop --sort-by='.lastTimestamp' | tail -20
-oc get workloads -n ray-workshop  # Kueue admitted workloads
-oc describe localqueue ray-workshop-queue -n ray-workshop
+oc get localqueue -n ray-workshop
 ```
 
-Common causes:
+In a notebook:
 
-- Wrong `local_queue` in notebook (must be `ray-workshop-queue`)
-- Kueue quota exhausted on the ClusterQueue
-- Insufficient cluster CPU/memory for head + workers
-
-## No workers
-
-- Check CPU quotas and `ManagedClusterConfig` resource settings in `workshop_common.py`.
-- Confirm LocalQueue exists: `oc get localqueue -n ray-workshop`.
+```python
+from codeflare_sdk import list_local_queues
+list_local_queues("ray-workshop")
+```
 
 ## Logs
 
-```sh
-oc logs -n ray-workshop -l ray.io/node-type=head -c ray-head --tail=200
-oc logs -n ray-workshop -l ray.io/node-type=worker -c ray-worker --tail=100
+```python
+job.status()
+job.logs()
 ```
 
-Or use **View Jobs** / Ray dashboard from `04-observe-and-manage.ipynb`.
+Or:
 
-## Reset between sessions
+```sh
+oc logs -n ray-workshop -l ray.io/node-type=head -c ray-head --tail=200
+```
+
+## Reset
 
 ```sh
 oc delete rayjob --all -n ray-workshop

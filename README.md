@@ -1,88 +1,112 @@
 # ray-workshop
 
-Hands-on workshop for running Ray distributed workloads on **Red Hat OpenShift AI** with the **CodeFlare SDK**, **KubeRay**, and **Kueue**.
+Hands-on workshop for [Ray-based distributed workloads on Red Hat OpenShift AI 3.4](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/running-ray-based-distributed-workloads_distributed-workloads), using the CodeFlare SDK with KubeRay and Kueue.
 
-Audience: Data scientists and ML engineers evaluating or using OpenShift AI for distributed Python and data processing.
+Audience: Data scientists and platform engineers evaluating OpenShift AI distributed workloads.
 
-Duration: About **80 minutes** for Topics 0–5.
+Duration: About 80 minutes for Topics 0–5.
 
-Format: Setup → local smoke test → **CodeFlare RayJob labs from a workbench** → observe on platform → troubleshooting.
+If you are starting the workshop, open [Topic 0 — Setup](/docs/00-setup.md).
 
-If you are starting the workshop, open [the first set of instructions](/docs/00-setup.md).
+Namespace: `ray-workshop`
 
-Namespace: All labs use project **`ray-workshop`**.
+## Official references (prioritized)
 
-## The stack
+1. [Overview of distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/overview-of-distributed-workloads_distributed-workloads) — components and infrastructure
+2. [Running Ray-based distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/running-ray-based-distributed-workloads_distributed-workloads) — CodeFlare SDK from Jupyter
+3. [Tame Ray workloads on OpenShift AI (Red Hat Developer)](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue) — three CodeFlare workflows
+
+## Background: What are we working with?
+
+This workshop runs on the [OpenShift AI distributed workloads stack](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/overview-of-distributed-workloads_distributed-workloads). Four technologies do most of the work:
+
+| Technology | What it is |
+|------------|------------|
+| Ray | Open source framework for scaling Python workloads across multiple machines. Turn laptop code into distributed code with minimal changes. |
+| KubeRay | Kubernetes operator that runs and manages Ray on OpenShift. Creates head and worker pods from custom resources. |
+| Kueue | Kubernetes-native job queuing. Traffic controller for cluster resources — fair sharing, priorities, and quotas. |
+| CodeFlare SDK | Python SDK for data scientists. Submit Ray workloads from a Jupyter workbench without writing Kubernetes YAML or using `kubectl`. |
+
+OpenShift AI ties these together: enable the `ray` and `kueue` components on the DataScienceCluster, use a workbench image that includes CodeFlare (for example Standard Data Science), and let cert-manager handle TLS for Ray clusters (mTLS enabled by default).
+
+### KubeRay custom resources
+
+KubeRay exposes Ray as Kubernetes CRDs. You rarely author these YAML files in this workshop — CodeFlare creates them — but they are what runs under the hood:
+
+| CRD | Purpose |
+|-----|---------|
+| RayCluster | A Ray cluster: one head node plus worker nodes. Traditionally defined with complex YAML manifests. |
+| RayJob | Manages the lifecycle of a Ray workload. Can spin up a temporary RayCluster, run your code, and tear down when finished — or submit against an existing RayCluster. |
+
+### Kueue custom resources
+
+Kueue admits workloads before pods are scheduled. This workshop uses LocalQueue and ClusterQueue directly; the others matter for platform design:
+
+| CRD | Purpose |
+|-----|---------|
+| LocalQueue | Namespaced entry point where teams submit jobs. Aggregates a project's workloads and routes them to a ClusterQueue for admission. |
+| ClusterQueue | Cluster-wide pool that enforces usage limits and quotas. Governs admission and fair sharing for workloads from multiple LocalQueues. |
+| Cohort | Groups ClusterQueues so they can share unused quota. Busier queues borrow capacity from idle ones. |
+| ResourceFlavor | Defines hardware variations available to the cluster (for example different GPU or CPU node types). |
+| WorkloadPriorityClass | Job importance for scheduling order; critical workloads can preempt less important ones. |
+
+In practice: participants reference a LocalQueue in the CodeFlare SDK; facilitators create LocalQueues and link them to a ClusterQueue.
+
+## Three CodeFlare workflows
+
+From the [Red Hat Developer article](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue#the_ephemeral_cluster__self_service__automated_jobs):
+
+| Workflow | SDK pattern | This workshop |
+|----------|-------------|---------------|
+| Long-running workspace | `Cluster` + `ClusterConfiguration` | Not covered (see official `copy_demo_nbs()` demos) |
+| Quick iteration on workspace | `RayJob` with `cluster_name=` | Not covered |
+| Ephemeral automated job | `RayJob` + `ManagedClusterConfig` | Topics 2–3 (primary path) |
+
+This workshop teaches the ephemeral cluster pattern: define cluster resources inline, submit once, KubeRay creates head + workers, job runs, cluster is removed when finished.
 
 ```
-Data scientist (notebook)
-        ↓ CodeFlare SDK
-    RayJob CR  ←—— Kueue (quota / queue)
-        ↓ KubeRay operator
-   Ray head + workers (pods)
+Workbench (CodeFlare SDK)
+        ↓ RayJob + ManagedClusterConfig
+    LocalQueue → ClusterQueue (Kueue admits)
+        ↓
+    KubeRay operator → Ray head + worker pods
+        ↓
+    Job completes → cluster torn down
 ```
-
-| Component | Customer-facing value |
-|-----------|------------------------|
-| **Ray** | Distributed Python — data, tasks, training |
-| **CodeFlare SDK** | Submit jobs from notebook; no YAML required |
-| **KubeRay** | Creates and destroys Ray clusters on OpenShift |
-| **Kueue** | Fair scheduling, quotas, gang scheduling |
-| **OpenShift AI** | Workbenches, DSC components, unified experience |
-
-All labs run from an **OpenShift AI workbench** in project `ray-workshop` ([setup](/docs/00-setup.md)).
-
-### RayJob lifecycle
-
-1. Job submitted from notebook
-2. Kueue admits when quota allows
-3. KubeRay creates head + workers
-4. Job runs; logs visible in console
-5. Cluster **automatically deleted** when finished
 
 ## Learning outcomes
 
 Participants should be able to:
 
-- Explain how Ray, CodeFlare, KubeRay, Kueue, and OpenShift AI fit together.
-- Run a local Ray Data smoke test **from an OpenShift AI workbench**.
-- Submit **RayJobs** with the CodeFlare SDK (`RayJob` + `ManagedClusterConfig`).
-- Monitor jobs from the notebook and OpenShift AI console.
-- Describe how Kueue admits workloads and KubeRay manages cluster lifecycle.
+- Describe the OpenShift AI distributed workloads stack (CodeFlare, KubeRay, Kueue).
+- Authenticate with `TokenAuthentication` and discover LocalQueues with `list_local_queues()`.
+- Submit an ephemeral `RayJob` with `ManagedClusterConfig` and monitor with `job.status()` / `job.logs()`.
+- Observe RayJobs and queues with `view_clusters()` and the OpenShift AI console.
 
 ## Lab sequence (~80 min)
 
 | Step | Topic | Time |
 |------|--------|------|
-| [0 – Setup](/docs/00-setup.md) | Create workbench, clone repo, install packages | ~10 min |
+| [0 – Setup](/docs/00-setup.md) | Workbench, auth, clone repo | ~10 min |
 | [1 – Workbench smoke test](/docs/01-workbench-smoke-test.md) | `01-local-smoke.ipynb` | ~10 min |
-| [2 – Ray Data on cluster](/docs/02-ray-data-cluster.md) | `02-ray-data-rayjob.ipynb` | ~25 min |
-| [3 – Distributed compute](/docs/03-distributed-compute.md) | `03-distributed-compute-rayjob.ipynb` | ~20 min |
-| [4 – Observe & manage](/docs/04-observe-and-manage.md) | `04-observe-and-manage.ipynb` | ~10 min |
-| [5 – Troubleshooting](/docs/05-troubleshooting.md) | Pitfalls and reset steps | ~5 min |
+| [2 – Ephemeral RayJob (Ray Data)](/docs/02-ray-data-cluster.md) | `02-ray-data-rayjob.ipynb` | ~25 min |
+| [3 – Ephemeral RayJob (compute)](/docs/03-distributed-compute.md) | `03-distributed-compute-rayjob.ipynb` | ~20 min |
+| [4 – Observe](/docs/04-observe-and-manage.md) | `04-observe-and-manage.ipynb` | ~10 min |
+| [5 – Troubleshooting](/docs/05-troubleshooting.md) | Common issues | ~5 min |
 
 ## Facilitator automation
 
-Prepare the **project** only (namespace, AI project label, LocalQueue). **Participants create their own workbenches** in [Topic 0](/docs/00-setup.md).
+Prepare the project only. Participants create their own workbenches in Topic 0.
 
 ```sh
-bash scripts/setup.sh -s 0   # Web Terminal, banner, auto-clone
 CLUSTER_QUEUE=default bash scripts/setup.sh -s 1
 bash scripts/sanity_check.sh
 ```
 
-Cluster admin: set `disableKueue: false` in `OdhDashboardConfig` so workbench creation works in Kueue-enabled projects.
+See [Prerequisites](/docs/prerequisites.md) for Kueue dashboard enablement and hardware profiles.
 
-YAML under `configs/facilitator/` is for facilitator smoke tests only — participants use notebooks.
-
-## Primary documentation
-
-- [Architecture](/docs/architecture.md)
-- [Prerequisites](/docs/prerequisites.md)
-- [Troubleshooting](/docs/troubleshooting.md)
-- [OpenShift AI — Working with distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html-single/working_with_distributed_workloads/)
-- [CodeFlare RayJob SDK](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue)
+YAML under `configs/facilitator/` is facilitator-only smoke testing.
 
 ## Companion workshop
 
-Process and train with **ray-workshop**; serve models with [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).
+Process and train with ray-workshop; serve models with [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).

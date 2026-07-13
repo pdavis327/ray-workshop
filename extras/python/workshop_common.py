@@ -1,4 +1,4 @@
-"""Shared helpers for CodeFlare workshop notebooks."""
+"""Shared helpers aligned with OpenShift AI 3.4 distributed workloads docs."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 
 from codeflare_sdk import ManagedClusterConfig, TokenAuthentication
 from codeflare_sdk import RayJob  # noqa: F401 — re-exported for notebooks
+from codeflare_sdk import list_local_queues  # noqa: F401 — re-exported for notebooks
 
 NAMESPACE = os.environ.get("RAY_WORKSHOP_NAMESPACE", "ray-workshop")
 LOCAL_QUEUE = os.environ.get("RAY_WORKSHOP_LOCAL_QUEUE", "ray-workshop-queue")
@@ -19,14 +20,28 @@ def repo_root() -> Path:
 
 
 def login(token: str, server: str) -> TokenAuthentication:
-    """Authenticate to OpenShift for CodeFlare SDK."""
-    auth = TokenAuthentication(token=token.strip(), server=server.strip(), skip_tls=True)
+    """Authenticate to OpenShift (see RHOAI: Using the cluster server and token)."""
+    skip_tls = os.environ.get("RAY_WORKSHOP_SKIP_TLS", "false").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    auth = TokenAuthentication(
+        token=token.strip(),
+        server=server.strip(),
+        skip_tls=skip_tls,
+    )
     auth.login()
     return auth
 
 
+def show_local_queues(namespace: str = NAMESPACE):
+    """List LocalQueues in the project (codeflare_sdk.list_local_queues)."""
+    return list_local_queues(namespace)
+
+
 def cpu_cluster_config(num_workers: int = 2) -> ManagedClusterConfig:
-    """Small CPU Ray cluster for workshop labs."""
+    """CPU Ray cluster for ephemeral RayJob labs (ManagedClusterConfig)."""
     return ManagedClusterConfig(
         num_workers=num_workers,
         head_cpu_requests=1,
@@ -54,36 +69,33 @@ def runtime_env_for_script(
     }
 
 
-def submit_rayjob(job: RayJob) -> str:
-    """Submit and print the RayJob name."""
-    name = job.submit()
-    print(f"Submitted RayJob: {name}")
-    return name
+def submit_rayjob(job: RayJob) -> RayJob:
+    """Submit a RayJob and return the job object for status/logs."""
+    job.submit()
+    print(f"Submitted RayJob: {job.job_name}")
+    return job
 
 
-def wait_for_rayjob(name: str, namespace: str = NAMESPACE, timeout_sec: int = 900) -> None:
-    """Poll RayJob status via the Kubernetes API (requires cluster access)."""
-    from kubernetes import client, config
-
-    try:
-        config.load_incluster_config()
-    except config.ConfigException:
-        config.load_kube_config()
-
-    api = client.CustomObjectsApi()
+def wait_for_rayjob(job: RayJob, timeout_sec: int = 900) -> str:
+    """Poll job.status() via CodeFlare SDK until terminal state."""
+    terminal = {"SUCCEEDED", "FAILED", "STOPPED", "STOPPING"}
     deadline = time.time() + timeout_sec
+    last = ""
     while time.time() < deadline:
-        obj = api.get_namespaced_custom_object(
-            group="ray.io",
-            version="v1",
-            namespace=namespace,
-            plural="rayjobs",
-            name=name,
-        )
-        status = obj.get("status", {})
-        job_status = status.get("jobStatus", "unknown")
-        print(f"RayJob {name}: jobStatus={job_status}")
-        if job_status in {"SUCCEEDED", "FAILED", "STOPPED"}:
-            return
+        last = str(job.status())
+        print(f"RayJob {job.job_name}: {last}")
+        if last.upper() in terminal or last in terminal:
+            return last
         time.sleep(15)
-    raise TimeoutError(f"Timed out waiting for RayJob {name}")
+    raise TimeoutError(f"Timed out waiting for RayJob {job.job_name} (last status: {last})")
+
+
+def print_job_logs(job: RayJob, tail: int = 80) -> None:
+    """Print RayJob driver logs (CodeFlare SDK)."""
+    logs = job.logs()
+    if not logs:
+        print("(no logs yet)")
+        return
+    lines = logs.splitlines()
+    for line in lines[-tail:]:
+        print(line)
