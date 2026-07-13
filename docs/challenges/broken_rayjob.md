@@ -14,7 +14,7 @@ before submitting the job.
 
 ## Your task
 
-1. Submit the job and observe the failure (`wait_for_rayjob` hangs or RayJob stays Pending).
+1. Submit the job and observe the failure (`job.status()` stays Pending / does not SUCCEEDED).
 2. Inspect status:
 
 ```sh

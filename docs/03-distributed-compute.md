@@ -14,7 +14,7 @@
 ### Hands-on
 
 1. In JupyterLab, open `ray-workshop/extras/notebooks/03-distributed-compute-rayjob.ipynb`.
-2. When you reach the auth cell, paste your OpenShift server URL and token (same as [Topic 2](/docs/02-ray-data-cluster.md#hands-on) — use `oc whoami --show-server` and `oc whoami --show-token` in a terminal if you need them again).
+2. When you reach the auth cell, paste the same OpenShift Console **server** and **token** as [Topic 2](/docs/02-ray-data-cluster.md#hands-on).
 3. Run all cells.
 
 ### What happens

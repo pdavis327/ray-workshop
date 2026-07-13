@@ -11,12 +11,22 @@ No hardware profiles in a Kueue-managed project:
 
 ## CodeFlare auth
 
-```sh
-oc whoami --show-server
-oc whoami --show-token
-```
+Get **server** and **token** from OpenShift Console → your username → **Copy login command** → Display token.
 
-Use `skip_tls=False` by default. For self-signed clusters: `export RAY_WORKSHOP_SKIP_TLS=true`.
+Do not use `oc whoami --show-token` inside the workbench — that is the workbench **service account**, which lacks permissions to create RayJobs.
+
+In the notebook:
+
+```python
+from codeflare_sdk import TokenAuthentication
+
+auth = TokenAuthentication(
+    token="...",
+    server="...",
+    skip_tls=True,  # lab clusters with self-signed certs; use False when trusted
+)
+auth.login()
+```
 
 ## RayJob stuck
 

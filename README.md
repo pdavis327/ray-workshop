@@ -147,7 +147,7 @@ Participants should be able to:
 | Step | Topic | Time |
 |------|--------|------|
 | [0 – Setup](/docs/00-setup.md) | Workbench, auth, clone repo | ~10 min |
-| [1 – Workbench smoke test](/docs/01-workbench-smoke-test.md) | `01-local-smoke.ipynb` | ~10 min |
+| [1 – Workbench smoke test](/docs/01-workbench-smoke-test.md) | `01-local-smoke.ipynb` (recommended) | ~10 min |
 | [2 – Ephemeral RayJob (Ray Data)](/docs/02-ray-data-cluster.md) | `02-ray-data-rayjob.ipynb` | ~25 min |
 | [3 – Ephemeral RayJob (compute)](/docs/03-distributed-compute.md) | `03-distributed-compute-rayjob.ipynb` | ~20 min |
 | [4 – Observe](/docs/04-observe-and-manage.md) | `04-observe-and-manage.ipynb` | ~10 min |
