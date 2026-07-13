@@ -1,0 +1,9 @@
+scratch/**
+!scratch/.gitkeep
+# Personal training notes (lives in scratch/, ignored with scratch/**)
+auth/**
+tmp/**
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

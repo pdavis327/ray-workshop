@@ -1,0 +1,14 @@
+# Shared read/write data for RayJob pods and workbench (RWX recommended).
+# Facilitators: adjust storageClassName if your cluster requires it.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ray-workshop-data
+  namespace: ray-workshop
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  # storageClassName: ocs-storagecluster-cephfs

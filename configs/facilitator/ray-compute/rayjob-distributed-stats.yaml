@@ -1,0 +1,84 @@
+# Facilitator smoke test — distributed compute RayJob.
+# Prerequisites: same ConfigMaps/PVC as ray-data facilitator manifests.
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: ray-workshop-distributed-stats
+  namespace: ray-workshop
+  labels:
+    app: ray-workshop
+    workshop-lab: distributed-compute
+  annotations:
+    kueue.x-k8s.io/queue-name: ray-workshop-queue
+spec:
+  shutdownAfterJobFinishes: true
+  ttlSecondsAfterFinished: 600
+  entrypoint: python /app/scripts/distributed_stats.py
+  runtimeEnvYAML: |
+    env_vars:
+      INPUT_PATH: /data/input/iris.csv
+      NUM_PARTITIONS: "4"
+  rayClusterSpec:
+    rayVersion: "2.52.0"
+    headGroupSpec:
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+            - name: ray-head
+              image: rayproject/ray:2.52.0
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: 2Gi
+                limits:
+                  cpu: "2"
+                  memory: 4Gi
+              volumeMounts:
+                - name: workshop-scripts
+                  mountPath: /app/scripts
+                - name: workshop-input
+                  mountPath: /data/input
+          volumes:
+            - name: workshop-scripts
+              configMap:
+                name: ray-workshop-scripts
+            - name: workshop-input
+              configMap:
+                name: ray-workshop-iris-data
+                items:
+                  - key: iris.csv
+                    path: iris.csv
+    workerGroupSpecs:
+      - groupName: cpu-workers
+        replicas: 2
+        minReplicas: 2
+        maxReplicas: 2
+        rayStartParams: {}
+        template:
+          spec:
+            containers:
+              - name: ray-worker
+                image: rayproject/ray:2.52.0
+                resources:
+                  requests:
+                    cpu: "1"
+                    memory: 2Gi
+                  limits:
+                    cpu: "2"
+                    memory: 4Gi
+                volumeMounts:
+                  - name: workshop-scripts
+                    mountPath: /app/scripts
+                  - name: workshop-input
+                    mountPath: /data/input
+            volumes:
+              - name: workshop-scripts
+                configMap:
+                  name: ray-workshop-scripts
+              - name: workshop-input
+                configMap:
+                  name: ray-workshop-iris-data
+                  items:
+                    - key: iris.csv
+                      path: iris.csv

@@ -1,0 +1,12 @@
+[project]
+name = "ray-workshop"
+version = "0.1.0"
+description = "Ray / KubeRay workshop labs for OpenShift AI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "codeflare-sdk>=0.38.0",
+    "pandas>=2.0.0",
+    "pyarrow>=14.0.0",
+    "ray[default]>=2.52",
+]

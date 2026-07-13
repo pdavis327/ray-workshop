@@ -1,0 +1,11 @@
+# Facilitator: set CLUSTER_QUEUE to your ClusterQueue name before applying.
+# Example: CLUSTER_QUEUE=default-cluster-queue envsubst < localqueue.yaml | oc apply -f -
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  name: ray-workshop-queue
+  namespace: ray-workshop
+  annotations:
+    kueue.x-k8s.io/default-queue: "true"
+spec:
+  clusterQueue: ${CLUSTER_QUEUE}

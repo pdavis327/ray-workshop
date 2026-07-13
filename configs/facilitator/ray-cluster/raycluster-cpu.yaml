@@ -1,0 +1,49 @@
+# Facilitator smoke test — persistent RayCluster for inspecting head/worker pods and dashboard.
+# Tear down when finished: oc delete raycluster ray-workshop-cpu -n ray-workshop
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: ray-workshop-cpu
+  namespace: ray-workshop
+  labels:
+    app: ray-workshop
+  annotations:
+    kueue.x-k8s.io/queue-name: ray-workshop-queue
+spec:
+  rayVersion: "2.52.0"
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+    template:
+      spec:
+        containers:
+          - name: ray-head
+            image: rayproject/ray:2.52.0
+            ports:
+              - containerPort: 8265
+                name: dashboard
+            resources:
+              requests:
+                cpu: "1"
+                memory: 2Gi
+              limits:
+                cpu: "2"
+                memory: 4Gi
+  workerGroupSpecs:
+    - groupName: cpu-workers
+      replicas: 2
+      minReplicas: 1
+      maxReplicas: 3
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+            - name: ray-worker
+              image: rayproject/ray:2.52.0
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: 1Gi
+                limits:
+                  cpu: "1"
+                  memory: 2Gi

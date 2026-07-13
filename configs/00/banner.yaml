@@ -1,0 +1,9 @@
+apiVersion: console.openshift.io/v1
+kind: ConsoleNotification
+metadata:
+  name: banner-ray-workshop
+spec:
+  text: "Red Hat OpenShift AI — Ray / KubeRay Distributed Workloads Workshop"
+  location: BannerTop
+  color: '#FFF'
+  backgroundColor: '#0066CC'

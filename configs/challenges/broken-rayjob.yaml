@@ -1,0 +1,57 @@
+# Broken RayJob — troubleshooting exercise
+# DO NOT use in timed participant labs without facilitator briefing.
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: ray-workshop-broken
+  namespace: ray-workshop
+  annotations:
+    kueue.x-k8s.io/queue-name: does-not-exist-queue
+spec:
+  shutdownAfterJobFinishes: true
+  entrypoint: python /app/scripts/distributed_stats.py
+  runtimeEnvYAML: |
+    env_vars:
+      INPUT_PATH: /data/input/iris.csv
+      NUM_PARTITIONS: "2"
+  rayClusterSpec:
+    rayVersion: "2.52.0"
+    headGroupSpec:
+      template:
+        spec:
+          containers:
+            - name: ray-head
+              image: rayproject/ray:2.52.0
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: 256Mi
+                limits:
+                  memory: 256Mi
+              volumeMounts:
+                - name: workshop-scripts
+                  mountPath: /app/scripts
+                - name: workshop-input
+                  mountPath: /data/input
+          volumes:
+            - name: workshop-scripts
+              configMap:
+                name: ray-workshop-scripts
+            - name: workshop-input
+              configMap:
+                name: ray-workshop-iris-data
+                items:
+                  - key: iris.csv
+                    path: iris.csv
+    workerGroupSpecs:
+      - groupName: cpu-workers
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: ray-worker
+                image: rayproject/ray:2.52.0
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: 512Mi

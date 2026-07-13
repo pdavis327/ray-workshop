@@ -1,0 +1,101 @@
+# Facilitator smoke test only — participants use CodeFlare notebooks.
+# Ordered apply:
+#   oc apply -f pvc-workshop.yaml
+#   oc create configmap ray-workshop-scripts --from-file=... (see configs/facilitator/README.md)
+#   oc create configmap ray-workshop-iris-data --from-file=iris.csv=extras/data/iris.csv
+#   oc apply -f rayjob-scale-data.yaml
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: ray-workshop-scale-data
+  namespace: ray-workshop
+  labels:
+    app: ray-workshop
+    workshop-lab: ray-data
+  annotations:
+    kueue.x-k8s.io/queue-name: ray-workshop-queue
+spec:
+  shutdownAfterJobFinishes: true
+  ttlSecondsAfterFinished: 600
+  entrypoint: python /app/scripts/scale_data.py
+  runtimeEnvYAML: |
+    pip:
+      - pyarrow>=14.0.0
+      - pandas>=2.0.0
+    env_vars:
+      INPUT_PATH: /data/input/iris.csv
+      OUTPUT_DIR: /data/output/iris
+  rayClusterSpec:
+    rayVersion: "2.52.0"
+    headGroupSpec:
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+            - name: ray-head
+              image: rayproject/ray:2.52.0
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: 2Gi
+                limits:
+                  cpu: "2"
+                  memory: 4Gi
+              volumeMounts:
+                - name: workshop-scripts
+                  mountPath: /app/scripts
+                - name: workshop-input
+                  mountPath: /data/input
+                - name: workshop-output
+                  mountPath: /data/output
+          volumes:
+            - name: workshop-scripts
+              configMap:
+                name: ray-workshop-scripts
+            - name: workshop-input
+              configMap:
+                name: ray-workshop-iris-data
+                items:
+                  - key: iris.csv
+                    path: iris.csv
+            - name: workshop-output
+              persistentVolumeClaim:
+                claimName: ray-workshop-data
+    workerGroupSpecs:
+      - groupName: cpu-workers
+        replicas: 2
+        minReplicas: 1
+        maxReplicas: 2
+        rayStartParams: {}
+        template:
+          spec:
+            containers:
+              - name: ray-worker
+                image: rayproject/ray:2.52.0
+                resources:
+                  requests:
+                    cpu: "1"
+                    memory: 2Gi
+                  limits:
+                    cpu: "2"
+                    memory: 4Gi
+                volumeMounts:
+                  - name: workshop-scripts
+                    mountPath: /app/scripts
+                  - name: workshop-input
+                    mountPath: /data/input
+                  - name: workshop-output
+                    mountPath: /data/output
+            volumes:
+              - name: workshop-scripts
+                configMap:
+                  name: ray-workshop-scripts
+              - name: workshop-input
+                configMap:
+                  name: ray-workshop-iris-data
+                  items:
+                    - key: iris.csv
+                      path: iris.csv
+              - name: workshop-output
+                persistentVolumeClaim:
+                  claimName: ray-workshop-data
