@@ -13,9 +13,10 @@
 
 ### Hands-on
 
-1. Open `extras/notebooks/04-observe-and-manage.ipynb`.
-2. Run `list_local_queues()` and `view_clusters()`.
-3. Use Open Ray Dashboard / View Jobs from the widget UI.
+1. In JupyterLab, open `ray-workshop/extras/notebooks/04-observe-and-manage.ipynb`.
+2. When you reach the auth cell, paste your OpenShift server URL and token (same as [Topic 2](/docs/02-ray-data-cluster.md#hands-on)).
+3. Run all cells — `list_local_queues()` and `view_clusters()`.
+4. Use Open Ray Dashboard / View Jobs from the widget UI.
 
 ### Console (facilitator demo)
 

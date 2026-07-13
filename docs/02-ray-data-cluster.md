@@ -16,7 +16,17 @@ Reference: [Ephemeral cluster: self-service automated jobs](https://developers.r
 ### Hands-on
 
 1. In JupyterLab, open `ray-workshop/extras/notebooks/02-ray-data-rayjob.ipynb`.
-2. Paste the token and server from [Topic 0, step 5](/docs/00-setup.md#5-save-credentials-for-topics-24) into the auth cell.
+2. When you reach the auth cell, get your credentials — open a terminal in JupyterLab if you need one:
+
+```sh
+oc whoami --show-server
+oc whoami --show-token
+```
+
+Paste the server URL and token into the auth cell. For self-signed clusters, run `export RAY_WORKSHOP_SKIP_TLS=true` in the terminal first, then re-run the auth cell.
+
+Per [Using the cluster server and token to authenticate](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/preparing-the-distributed-training-environment_distributed-workloads#using-the-cluster-server-and-token-to-authenticate_preparing-the-distributed-training-environment).
+
 3. Run all cells. The notebook calls `list_local_queues("ray-workshop")` after login.
 
 ### Pattern (official)

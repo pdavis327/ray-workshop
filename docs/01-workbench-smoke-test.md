@@ -17,11 +17,14 @@ Topic 2 uses the [ephemeral RayJob pattern](https://developers.redhat.com/articl
 
 - OpenShift AI workbench (JupyterLab), project `ray-workshop`
 - "Local" = Ray inside the workbench pod, not a KubeRay cluster
+- No OpenShift API token required for this topic
 
 ### Hands-on
 
-1. In JupyterLab, open the file browser and navigate to `ray-workshop/extras/notebooks/`.
-2. Open `01-local-smoke.ipynb` (created in [Topic 0, step 6](/docs/00-setup.md#6-start-topic-1)).
+After [cloning the repo in Topic 0](/docs/00-setup.md#4-clone-the-repo), switch from the terminal to the **file browser** (folder icon in the left sidebar).
+
+1. Navigate to `ray-workshop` → `extras` → `notebooks`.
+2. Open `01-local-smoke.ipynb`.
 3. Run all cells.
 
 Or from the workbench terminal:
