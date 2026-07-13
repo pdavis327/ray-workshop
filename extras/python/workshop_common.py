@@ -13,10 +13,32 @@ from codeflare_sdk import list_local_queues  # noqa: F401 — re-exported for no
 NAMESPACE = os.environ.get("RAY_WORKSHOP_NAMESPACE", "ray-workshop")
 LOCAL_QUEUE = os.environ.get("RAY_WORKSHOP_LOCAL_QUEUE", "ray-workshop-queue")
 
+_REPO_MARKER = Path("extras/scripts/scale_data.py")
+
 
 def repo_root() -> Path:
-    """Workbench clone path; override with RAY_WORKSHOP_REPO."""
-    return Path(os.environ.get("RAY_WORKSHOP_REPO", Path.cwd())).resolve()
+    """Find the ray-workshop clone (JupyterLab cwd is often the notebook directory)."""
+    for env_name in ("RAY_WORKSHOP_REPO", "REPO_ROOT"):
+        env_val = os.environ.get(env_name)
+        if env_val:
+            root = Path(env_val).expanduser().resolve()
+            if (root / _REPO_MARKER).is_file():
+                return root
+
+    for directory in [Path.cwd(), *Path.cwd().parents]:
+        root = directory.resolve()
+        if (root / _REPO_MARKER).is_file():
+            return root
+
+    for candidate in (Path.cwd() / "ray-workshop", Path("/opt/app-root/src/ray-workshop")):
+        root = candidate.resolve()
+        if (root / _REPO_MARKER).is_file():
+            return root
+
+    raise FileNotFoundError(
+        "Could not find ray-workshop (expected extras/scripts/scale_data.py). "
+        "Clone the repo into your workbench or set RAY_WORKSHOP_REPO."
+    )
 
 
 def login(token: str, server: str) -> TokenAuthentication:
