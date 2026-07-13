@@ -50,7 +50,7 @@ help(){
   loginfo " -h, --help   usage"
   loginfo " -s, --step   step number (required)"
   loginfo "        0       - Web Terminal operator, banner, tooling template"
-  loginfo "        1       - Namespace and Kueue LocalQueue for ray-workshop"
+  loginfo "        1       - Namespace, LocalQueues, and cpu-local-queue HardwareProfile"
   return 0
 }
 
@@ -89,14 +89,18 @@ step_1(){
   logbanner "Prepare ray-workshop project for CodeFlare labs"
 
   CLUSTER_QUEUE="${CLUSTER_QUEUE:-default}"
-  export CLUSTER_QUEUE
+  HARDWARE_PROFILE_LOCAL_QUEUE="${HARDWARE_PROFILE_LOCAL_QUEUE:-default}"
+  export CLUSTER_QUEUE HARDWARE_PROFILE_LOCAL_QUEUE
   loginfo "Using ClusterQueue: ${CLUSTER_QUEUE}"
+  loginfo "Hardware profile local queue: ${HARDWARE_PROFILE_LOCAL_QUEUE}"
 
   retry oc apply -f "${GIT_ROOT}/configs/samples/project/namespace.yaml"
+  retry envsubst < "${GIT_ROOT}/configs/samples/kueue/localqueue-default.yaml" | grep -v '^#' | oc apply -f -
   retry envsubst < "${GIT_ROOT}/configs/samples/kueue/localqueue.yaml" | grep -v '^#' | oc apply -f -
+  retry envsubst < "${GIT_ROOT}/configs/samples/hardware-profile/cpu-local-queue.yaml" | grep -v '^#' | oc apply -f -
 
-  loginfo "Project ray-workshop is ready (OpenShift AI project + LocalQueue)."
-  loginfo "Participants create their own workbench in Topic 0 — facilitators do not."
+  loginfo "Project ray-workshop is ready (OpenShift AI project + LocalQueues + cpu-local-queue profile)."
+  loginfo "Participants create their own workbench in Topic 0 — select Hardware profile: CPU (local queue)."
 }
 
 setup(){

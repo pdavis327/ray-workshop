@@ -1,0 +1,9 @@
+# Facilitator: ensure LocalQueue "default" exists for hardware profiles that reference it.
+# Example: CLUSTER_QUEUE=default envsubst < localqueue-default.yaml | oc apply -f -
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  name: default
+  namespace: ray-workshop
+spec:
+  clusterQueue: ${CLUSTER_QUEUE}

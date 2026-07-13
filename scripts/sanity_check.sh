@@ -37,10 +37,22 @@ else
     echo -e "[${YELLOW}WARN${NC}] Project ray-workshop not found. Run: bash scripts/setup.sh -s 1"
 fi
 
+if oc get hardwareprofile -n redhat-ods-applications cpu-local-queue &> /dev/null; then
+    echo -e "[${GREEN}OK${NC}] HardwareProfile cpu-local-queue exists."
+else
+    echo -e "[${YELLOW}WARN${NC}] HardwareProfile cpu-local-queue not found. Run: bash scripts/setup.sh -s 1"
+fi
+
 if oc get localqueue -n ray-workshop ray-workshop-queue &> /dev/null; then
     echo -e "[${GREEN}OK${NC}] LocalQueue ray-workshop-queue exists."
 else
     echo -e "[${YELLOW}WARN${NC}] LocalQueue ray-workshop-queue not found. Run: bash scripts/setup.sh -s 1"
+fi
+
+if oc get localqueue -n ray-workshop default &> /dev/null; then
+    echo -e "[${GREEN}OK${NC}] LocalQueue default exists in ray-workshop."
+else
+    echo -e "[${YELLOW}WARN${NC}] LocalQueue default not found in ray-workshop."
 fi
 
 echo "--- Sanity Check Complete ---"

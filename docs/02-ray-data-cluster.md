@@ -15,9 +15,9 @@ Reference: [Ephemeral cluster: self-service automated jobs](https://developers.r
 
 ### Hands-on
 
-1. Open `extras/notebooks/02-ray-data-rayjob.ipynb`.
-2. Set token and server in the auth cell (or use env vars).
-3. Run all cells.
+1. In JupyterLab, open `ray-workshop/extras/notebooks/02-ray-data-rayjob.ipynb`.
+2. Paste the token and server from [Topic 0, step 5](/docs/00-setup.md#5-save-credentials-for-topics-24) into the auth cell.
+3. Run all cells. The notebook calls `list_local_queues("ray-workshop")` after login.
 
 ### Pattern (official)
 

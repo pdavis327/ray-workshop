@@ -47,10 +47,18 @@ Kueue admits workloads before pods are scheduled. This workshop uses LocalQueue 
 | LocalQueue | Namespaced entry point where teams submit jobs. Aggregates a project's workloads and routes them to a ClusterQueue for admission. |
 | ClusterQueue | Cluster-wide pool that enforces usage limits and quotas. Governs admission and fair sharing for workloads from multiple LocalQueues. |
 | Cohort | Groups ClusterQueues so they can share unused quota. Busier queues borrow capacity from idle ones. |
-| ResourceFlavor | Defines hardware variations available to the cluster (for example different GPU or CPU node types). |
+| ResourceFlavor | Kueue label for a node pool type (CPU vs GPU). ClusterQueues attach quota to flavors. See below. |
 | WorkloadPriorityClass | Job importance for scheduling order; critical workloads can preempt less important ones. |
 
 In practice: participants reference a LocalQueue in the CodeFlare SDK; facilitators create LocalQueues and link them to a ClusterQueue.
+
+#### ResourceFlavor (platform)
+
+A ResourceFlavor tells Kueue which **kind of nodes** a quota bucket applies to. ClusterQueues reference flavors when defining limits — for example `default-flavor` for CPU/memory on general nodes, or `nvidia-gpu-flavor` for GPU capacity.
+
+OpenShift AI may auto-create flavors when Kueue is enabled. A flavor with empty `spec: {}` (like `nvidia-gpu-flavor` on many clusters) is a placeholder until a platform engineer adds `nodeLabels` and wires GPU quota into a ClusterQueue.
+
+This workshop is **CPU-only** — Topics 0–5 use `cpu-local-queue` and `default-flavor`. GPU RayJobs need additional facilitator setup; see [Prerequisites — Optional GPU extension](/docs/prerequisites.md#optional-gpu-ray-workloads).
 
 ## Why OpenShift AI instead of DIY upstream?
 

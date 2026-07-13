@@ -20,6 +20,7 @@ Data scientist (Jupyter workbench)
 |-----|-------|---------|
 | LocalQueue | Namespace | Team/project queue; CodeFlare sets `local_queue=` |
 | ClusterQueue | Cluster | Quota pool; admits workloads |
+| ResourceFlavor | Cluster | Node pool type for quota (e.g. `default-flavor`, `nvidia-gpu-flavor`); see [GPU extension](/docs/prerequisites.md#optional-gpu-ray-workloads) |
 | RayJob | Namespace | Entrypoint + cluster spec or cluster reference |
 | RayCluster | Namespace | Long-running workspace (not used in this workshop) |
 

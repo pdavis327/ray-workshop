@@ -20,8 +20,9 @@ Topic 2 uses the [ephemeral RayJob pattern](https://developers.redhat.com/articl
 
 ### Hands-on
 
-1. Open `extras/notebooks/01-local-smoke.ipynb`.
-2. Run all cells.
+1. In JupyterLab, open the file browser and navigate to `ray-workshop/extras/notebooks/`.
+2. Open `01-local-smoke.ipynb` (created in [Topic 0, step 6](/docs/00-setup.md#6-start-topic-1)).
+3. Run all cells.
 
 Or from the workbench terminal:
 

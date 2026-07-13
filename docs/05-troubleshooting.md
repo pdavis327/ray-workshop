@@ -12,7 +12,7 @@ Official guide: [Troubleshooting common problems with distributed workloads](htt
 
 | Symptom | Fix |
 |---------|-----|
-| No hardware profiles when creating workbench | Enable `disableKueue: false`; create hardware profile with Local queue strategy |
+| No hardware profiles when creating workbench | Run `setup.sh -s 1` for `cpu-local-queue`; enable `disableKueue: false` |
 | `TokenAuthentication` fails | Regenerate token; check server URL; try `RAY_WORKSHOP_SKIP_TLS=true` |
 | RayJob Pending | Wrong `local_queue`; check `list_local_queues()` and `oc describe localqueue` |
 | `Default Local Queue not found` | Facilitator: run `setup.sh -s 1` or create LocalQueue in project |

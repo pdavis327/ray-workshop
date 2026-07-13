@@ -1,0 +1,29 @@
+# Facilitator: set CLUSTER_QUEUE and optionally HARDWARE_PROFILE_LOCAL_QUEUE before applying.
+# Example: CLUSTER_QUEUE=default HARDWARE_PROFILE_LOCAL_QUEUE=default envsubst < cpu-local-queue.yaml | oc apply -f -
+apiVersion: infrastructure.opendatahub.io/v1
+kind: HardwareProfile
+metadata:
+  name: cpu-local-queue
+  namespace: redhat-ods-applications
+  annotations:
+    opendatahub.io/dashboard-feature-visibility: '[]'
+    opendatahub.io/disabled: 'false'
+    opendatahub.io/display-name: CPU (local queue)
+spec:
+  identifiers:
+    - resourceType: CPU
+      identifier: cpu
+      displayName: CPU
+      minCount: 1
+      maxCount: 4
+      defaultCount: 2
+    - resourceType: Memory
+      identifier: memory
+      displayName: Memory
+      minCount: 2Gi
+      maxCount: 8Gi
+      defaultCount: 4Gi
+  scheduling:
+    type: Queue
+    kueue:
+      localQueueName: ${HARDWARE_PROFILE_LOCAL_QUEUE}

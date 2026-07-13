@@ -28,9 +28,11 @@ Worker capacity: ~6–8 CPUs for a 2-worker RayJob lab.
 Kueue-managed projects require:
 
 1. `OdhDashboardConfig.spec.dashboardConfig.disableKueue: false` — [Enabling Kueue in the dashboard](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-workloads-with-kueue)
-2. At least one enabled hardware profile with workload allocation strategy Local queue, pointing at a LocalQueue name that exists in participant projects (typically `default`)
+2. A Kueue-enabled hardware profile with **Local queue** strategy (no node selectors). `setup.sh -s 1` applies `cpu-local-queue` in `redhat-ods-applications`, pointing at LocalQueue `default` by default.
 
-Without both, participants may see no hardware profiles when creating a workbench in `ray-workshop`.
+The built-in default hardware profile often uses node selectors and will not appear in Kueue-managed projects like `ray-workshop`. Use `cpu-local-queue` instead.
+
+Without both Kueue dashboard enablement and an eligible profile, participants may see no hardware profiles when creating a workbench.
 
 ## Participant workbench
 
@@ -52,7 +54,107 @@ CLUSTER_QUEUE=default bash scripts/setup.sh -s 1
 bash scripts/sanity_check.sh
 ```
 
-Creates namespace `ray-workshop` with `opendatahub.io/dashboard=true`, Kueue label, and LocalQueue `ray-workshop-queue`.
+Creates namespace `ray-workshop`, LocalQueues (`default`, `ray-workshop-queue`), and HardwareProfile `cpu-local-queue` (CPU, Local queue → `default`).
+
+Override the profile's LocalQueue reference:
+
+```sh
+HARDWARE_PROFILE_LOCAL_QUEUE=ray-workshop-queue CLUSTER_QUEUE=default bash scripts/setup.sh -s 1
+```
+
+## Optional: GPU Ray workloads
+
+Topics 0–5 use CPU only. To extend the workshop (or run GPU RayJobs via Kueue), facilitators configure three layers that must align. Official references: [Managing distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-distributed-workloads_managing-rhoai), [hardware profiles](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_accelerators/working-with-hardware-profiles_accelerators).
+
+### How the pieces connect
+
+```
+ResourceFlavor (node pool label)
+        ↓ referenced by
+ClusterQueue (GPU quota under that flavor)
+        ↓ fed by
+LocalQueue (per-project inbox)
+        ↓ referenced by
+HardwareProfile type: Queue (workbench)  OR  CodeFlare RayJob local_queue=
+```
+
+### 1. ResourceFlavor
+
+Kueue uses ResourceFlavor to name a hardware pool. Check what exists:
+
+```sh
+oc get resourceflavors
+oc get resourceflavor nvidia-gpu-flavor -o yaml
+```
+
+If `spec` is empty (`spec: {}`), the flavor is a placeholder. Add node matching so Kueue knows which nodes count toward GPU quota — labels must match your GPU nodes (adjust for your cluster):
+
+```yaml
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: nvidia-gpu-flavor
+spec:
+  nodeLabels:
+    nvidia.com/gpu.present: "true"
+    # or: gpu-type: largegpu
+```
+
+Verify node labels on GPU workers match before applying.
+
+### 2. ClusterQueue — add GPU quota
+
+The auto-created `default` ClusterQueue often quotas only CPU and memory under `default-flavor`. GPU RayJobs need `nvidia.com/gpu` in a resource group that references `nvidia-gpu-flavor`.
+
+Inspect current quota:
+
+```sh
+oc get clusterqueue default -o yaml
+```
+
+Extend or create a ClusterQueue per [RHOAI distributed workloads admin guide](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-distributed-workloads_managing-rhoai). Conceptually, add a resource group like:
+
+```yaml
+resourceGroups:
+  - coveredResources:
+      - nvidia.com/gpu
+    flavors:
+      - name: nvidia-gpu-flavor
+        resources:
+          - name: nvidia.com/gpu
+            nominalQuota: "4"   # example: 4 GPUs cluster-wide
+```
+
+CPU and GPU quotas can live in the same ClusterQueue or separate ClusterQueues linked to different LocalQueues.
+
+### 3. HardwareProfile for Kueue-managed workbenches
+
+In Kueue-managed projects, workbench profiles must use **`scheduling.type: Queue`** — not node selectors. GPU profiles used for KServe (`type: Node` with `gpu-type` selectors) will not appear in `ray-workshop`.
+
+Create a GPU profile the same way as `cpu-local-queue`: Local queue strategy, LocalQueue name that exists in the project (e.g. `default`), plus GPU identifiers in `spec.identifiers`. Apply to `redhat-ods-applications`.
+
+### 4. CodeFlare RayJob — request GPUs
+
+In `ManagedClusterConfig`, request accelerators on workers (from the [developer article](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue)):
+
+```python
+ManagedClusterConfig(
+    num_workers=2,
+    worker_accelerators={"nvidia.com/gpu": 1},
+    # ... cpu/memory requests ...
+)
+```
+
+Use a CUDA-capable Ray image per [Supported Configurations](https://access.redhat.com/articles/6856871).
+
+### KServe vs Kueue GPU paths
+
+| Use case | Scheduling | Example on this cluster |
+|----------|------------|-------------------------|
+| Model serving (KServe) | HardwareProfile `type: Node` + node selectors | `nvidia-l40s`, `nvidia-l4-small` (GitOps) |
+| Ray workbench / RayJob in Kueue project | HardwareProfile `type: Queue` + LocalQueue | `cpu-local-queue` (workshop); create `gpu-local-queue` for GPU extension |
+
+Do not assume a node-selector GPU profile works for Ray workbenches in `ray-workshop`.
 
 ## Disconnect / air-gap
 
