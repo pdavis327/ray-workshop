@@ -52,6 +52,57 @@ Kueue admits workloads before pods are scheduled. This workshop uses LocalQueue 
 
 In practice: participants reference a LocalQueue in the CodeFlare SDK; facilitators create LocalQueues and link them to a ClusterQueue.
 
+## Why OpenShift AI instead of DIY upstream?
+
+Ray, KubeRay, Kueue, and CodeFlare are all open source. You can install and connect them on any Kubernetes cluster yourself. Many teams start there — and many eventually hit the same wall: integration work, quota politics, and operational toil that has little to do with the models they are trying to build.
+
+OpenShift AI is Red Hat's answer to that problem: a tested, supported platform that wires these projects together for enterprise use.
+
+### DIY upstream: what you own
+
+| Area | On your own |
+|------|-------------|
+| Operators | Install, upgrade, and version-match KubeRay, Kueue, and cert-manager; resolve controller conflicts |
+| Security | Configure mTLS, network isolation, and Ray cluster hardening |
+| Quotas | Wire Kueue admission webhooks to Ray CRDs, or run manual GPU approval queues |
+| Developer experience | Data scientists write `RayCluster` / `RayJob` YAML or learn low-level cluster APIs |
+| Observability | Piece together logs, metrics, and status across multiple operators |
+| Air-gapped / regulated | Mirror images, document install paths, and test the full stack yourself |
+
+This is workable for a skilled platform team. It is also ongoing work every time upstream ships a breaking change.
+
+### What OpenShift AI and Red Hat builds add
+
+Per the [distributed workloads overview](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/overview-of-distributed-workloads_distributed-workloads) and [managing workloads with Kueue](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-workloads-with-kueue):
+
+| Capability | Benefit |
+|------------|---------|
+| Integrated DSC components | Turn on `ray` and `kueue` on the DataScienceCluster; operators deploy and integrate with the OpenShift AI control plane |
+| Red Hat build of Kueue Operator | Supported quota management, admission control, and prioritization for RayJobs, RayClusters, workbenches, and other workloads |
+| Managed KubeRay | Ray clusters on OpenShift with controlled-network defaults and cert-manager-backed TLS |
+| CodeFlare in workbench images | Submit from Jupyter in Python; SDK creates the Kubernetes objects — no YAML, no `kubectl` for data scientists |
+| Dashboard and hardware profiles | Self-service workbench creation with Local queue allocation; view distributed workload status in one place |
+| Documented operations | Install guides, [supported configurations](https://access.redhat.com/articles/6856871), disconnected paths, and [troubleshooting playbooks](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/troubleshooting-common-problems-with-distributed-workloads-for-users_distributed-workloads) |
+
+You are not buying a different Ray. You are buying the integration, hardening, and operational model around it.
+
+### From manual gatekeeper to self-service platform
+
+The [Red Hat Developer article on KubeRay and Kueue](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue) frames the business case clearly:
+
+Without Kueue, platform teams often become human schedulers — approving every GPU request, chasing forgotten clusters that idle overnight, and blocking data scientists on tickets. Utilization stays low; cost stays high.
+
+With Kueue integrated into OpenShift AI, the model flips:
+
+- Platform admins design quota policy once (ClusterQueues, priorities, cohorts) instead of approving every job.
+- Data scientists self-serve through LocalQueues and the CodeFlare SDK — resources in seconds, not hours.
+- Ephemeral RayJobs spin up, run, and tear down automatically — less idle GPU waste.
+- High-priority workloads can preempt lower-priority ones when quota is borrowed across teams.
+
+That is why organizations invest in OpenShift AI rather than assembling the same stack by hand: less glue code and ticket-queue operations, more time for research and platform policy design — with a vendor-backed path when something breaks at 2 AM.
+
+This workshop shows the data-scientist side of that story (CodeFlare from a workbench). Facilitator setup covers the platform side (LocalQueue, ClusterQueue, hardware profiles) that makes self-service possible.
+
 ## Three CodeFlare workflows
 
 From the [Red Hat Developer article](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue#the_ephemeral_cluster__self_service__automated_jobs):
