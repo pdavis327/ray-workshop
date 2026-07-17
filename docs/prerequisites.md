@@ -21,7 +21,7 @@ oc get pods -n redhat-ods-applications | grep kuberay
 oc get pods -n openshift-kueue-operator
 ```
 
-Worker capacity: ~6–8 CPUs for a 2-worker RayJob lab.
+Worker capacity: at least **2 GPUs** plus head CPU/memory for the workshop RayCluster shape (2 workers × 1 GPU).
 
 ## OpenShift AI dashboard (facilitator)
 
@@ -62,9 +62,9 @@ Override the profile's LocalQueue reference:
 HARDWARE_PROFILE_LOCAL_QUEUE=ray-workshop-queue CLUSTER_QUEUE=default bash scripts/setup.sh -s 1
 ```
 
-## Optional: GPU Ray workloads
+## GPU Ray workloads
 
-Topics 0–5 use CPU only. To extend the workshop (or run GPU RayJobs via Kueue), facilitators configure three layers that must align. Official references: [Managing distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-distributed-workloads_managing-rhoai), [hardware profiles](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_accelerators/working-with-hardware-profiles_accelerators).
+**Required for this workshop.** Labs use `workshop_cluster_configuration()` — 2 workers with `worker_extended_resource_requests={"nvidia.com/gpu": 1}` each. Facilitators must align three layers. Official references: [Managing distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-distributed-workloads_managing-rhoai), [hardware profiles](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_accelerators/working-with-hardware-profiles_accelerators).
 
 ### How the pieces connect
 
@@ -104,7 +104,7 @@ Verify node labels on GPU workers match before applying.
 
 ### 2. ClusterQueue — add GPU quota
 
-The auto-created `default` ClusterQueue often quotas only CPU and memory under `default-flavor`. GPU RayJobs need `nvidia.com/gpu` in a resource group that references `nvidia-gpu-flavor`.
+The auto-created `default` ClusterQueue often quotas only CPU and memory under `default-flavor`. Workshop RayClusters need `nvidia.com/gpu` in a resource group that references `nvidia-gpu-flavor` (at least quota **2** for one lab cluster).
 
 Inspect current quota:
 
@@ -154,7 +154,7 @@ ManagedClusterConfig(
 )
 ```
 
-Omit GPU fields entirely for CPU-only labs (do not set `nvidia.com/gpu: 0`).
+Omit GPU fields on the **head**. Do not set `nvidia.com/gpu: 0` (can break admission). Workshop default is workers-only GPUs via `workshop_cluster_configuration()`.
 
 Use a CUDA-capable Ray image per [Supported Configurations](https://access.redhat.com/articles/6856871).
 

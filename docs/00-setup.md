@@ -3,7 +3,7 @@
 <p align="center">
 <a href="/README.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/01-workbench-smoke-test.md">Next</a>
+<a href="/docs/02-ray-data-cluster.md">Next</a>
 </p>
 
 > All participant labs run from an OpenShift AI workbench (JupyterLab). You do not need `oc apply` or YAML.
@@ -62,7 +62,7 @@ You will use two areas in JupyterLab:
 | **Terminal** (File → New → Terminal) | Clone the repo, install packages |
 | **Notebooks** (file browser → `extras/notebooks/`) | All workshop labs |
 
-Step 4 uses the terminal. After that, continue to [Topic 1](/docs/01-workbench-smoke-test.md).
+Step 4 uses the terminal. After that, continue to [Topic 2 — Ray Data on cluster](/docs/02-ray-data-cluster.md).
 
 ## 4. Clone the repo
 
@@ -87,21 +87,20 @@ from codeflare_sdk import copy_demo_nbs
 copy_demo_nbs()
 ```
 
-Continue to [Topic 1 — Workbench smoke test](/docs/01-workbench-smoke-test.md).
+Continue to [Topic 2 — Ray Data on cluster](/docs/02-ray-data-cluster.md).
 
 ## Notebook order
 
 | Notebook | Topic |
 |----------|--------|
-| `01-local-smoke.ipynb` | 1 |
-| `02-ray-data-job-client.ipynb` | 2 — cluster + job client |
+| `02-ray-data-job-client.ipynb` | 2 — cluster + job client (+ `view_clusters`) |
 | `03-distributed-compute-job-client.ipynb` | 3 — cluster + job client |
-| `04-observe-and-manage.ipynb` | 4 — `view_clusters()` |
+| `04-ray-train-job-client.ipynb` | 4 — Ray Train (GPU) |
 
 Topics 2–4 prompt for OpenShift API credentials in the notebook when you need them.
 
 <p align="center">
 <a href="/README.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/01-workbench-smoke-test.md">Next</a>
+<a href="/docs/02-ray-data-cluster.md">Next</a>
 </p>

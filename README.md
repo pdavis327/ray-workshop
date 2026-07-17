@@ -4,7 +4,7 @@ Hands-on workshop for [Ray-based distributed workloads on Red Hat OpenShift AI 3
 
 Audience: Data scientists and platform engineers evaluating OpenShift AI distributed workloads.
 
-Duration: About 80 minutes for Topics 0–5.
+Duration: About 85 minutes for Topics 0–5.
 
 If you are starting the workshop, open [Topic 0 — Setup](/docs/00-setup.md).
 
@@ -58,7 +58,7 @@ A ResourceFlavor tells Kueue which **kind of nodes** a quota bucket applies to. 
 
 OpenShift AI may auto-create flavors when Kueue is enabled. A flavor with empty `spec: {}` (like `nvidia-gpu-flavor` on many clusters) is a placeholder until a platform engineer adds `nodeLabels` and wires GPU quota into a ClusterQueue.
 
-This workshop is **CPU-only** — Topics 0–5 use `cpu-local-queue` and `default-flavor`. GPU Ray clusters need additional facilitator setup; see [Prerequisites — Optional GPU extension](/docs/prerequisites.md#optional-gpu-ray-workloads).
+This workshop defaults to **2 GPU workers** (1× `nvidia.com/gpu` each) via `workshop_cluster_configuration`. Facilitators must wire GPU quota into the ClusterQueue; see [Prerequisites — GPU Ray workloads](/docs/prerequisites.md#gpu-ray-workloads).
 
 ## Why OpenShift AI instead of DIY upstream?
 
@@ -140,19 +140,18 @@ Workbench (CodeFlare SDK)
 Participants should be able to:
 
 - Describe the OpenShift AI distributed workloads stack (CodeFlare, KubeRay, Kueue).
-- Authenticate with `AuthConfig` / `set_api_client` and discover LocalQueues with `list_local_queues()`.
-- Create a `RayCluster` and submit work with `cluster.job_client`, then tear down with `cluster.down()`.
-- Observe clusters and jobs with `view_clusters()` and the Ray Dashboard.
+- Authenticate with `AuthConfig` / `set_api_client`, discover queues with `list_local_queues()`, and inspect clusters with `view_clusters()`.
+- Create a GPU `RayCluster` and submit work with `cluster.job_client`, then tear down with `cluster.down()`.
+- Run distributed training with Ray Train (`TorchTrainer`) on FashionMNIST.
 
-## Lab sequence (~80 min)
+## Lab sequence (~85 min)
 
 | Step | Topic | Time |
 |------|--------|------|
 | [0 – Setup](/docs/00-setup.md) | Workbench, auth, clone repo | ~10 min |
-| [1 – Workbench smoke test](/docs/01-workbench-smoke-test.md) | `01-local-smoke.ipynb` (recommended) | ~10 min |
 | [2 – Ray Data on cluster](/docs/02-ray-data-cluster.md) | `02-ray-data-job-client.ipynb` | ~25 min |
 | [3 – Distributed compute](/docs/03-distributed-compute.md) | `03-distributed-compute-job-client.ipynb` | ~20 min |
-| [4 – Observe](/docs/04-observe-and-manage.md) | `04-observe-and-manage.ipynb` | ~10 min |
+| [4 – Ray Train](/docs/04-ray-train.md) | `04-ray-train-job-client.ipynb` | ~25 min |
 | [5 – Troubleshooting](/docs/05-troubleshooting.md) | Common issues | ~5 min |
 
 ## Facilitator automation

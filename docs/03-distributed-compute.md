@@ -3,7 +3,7 @@
 <p align="center">
 <a href="/docs/02-ray-data-cluster.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/04-observe-and-manage.md">Next</a>
+<a href="/docs/04-ray-train.md">Next</a>
 </p>
 
 ### Objectives (~20 min)
@@ -21,6 +21,8 @@
 
 `distributed_stats.py` partitions the Iris CSV and runs `@ray.remote` tasks across workers. Results appear in job logs.
 
+Uses the same **2×GPU** `workshop_cluster_configuration` as Topic 2 (GPUs unused by this script but keep the workshop cluster shape consistent).
+
 ### Checklist
 
 - [ ] Job completes successfully.
@@ -34,5 +36,5 @@ Ray on OpenShift AI supports general distributed Python — not only ML framewor
 <p align="center">
 <a href="/docs/02-ray-data-cluster.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/04-observe-and-manage.md">Next</a>
+<a href="/docs/04-ray-train.md">Next</a>
 </p>
