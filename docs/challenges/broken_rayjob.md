@@ -1,28 +1,27 @@
-# Challenge: fix a broken RayJob
+# Challenge: diagnose a stuck RayCluster (facilitator / advanced)
+
+> Optional stretch. The main workshop path is `Cluster` + `job_client`.
 
 Optional exercise (~10 min) for facilitators or advanced participants.
 
 ## Scenario A — notebook (participant path)
 
-In `02-ray-data-rayjob.ipynb`, deliberately set:
+In Topic 2 or 3, deliberately set a wrong queue:
 
 ```python
 LOCAL_QUEUE = "does-not-exist-queue"
 ```
 
-before submitting the job.
-
-## Your task
-
-1. Submit the job and observe the failure (`job.status()` stays Pending / does not SUCCEEDED).
-2. Inspect status:
+1. `cluster.apply()` and observe the RayCluster stay suspended / never ready.
+2. Inspect:
 
 ```sh
-oc describe rayjob ray-workshop-scale-data -n ray-workshop
+oc get workload -n ray-workshop
+oc describe workload <name> -n ray-workshop
 oc describe localqueue -n ray-workshop
 ```
 
-3. Fix `LOCAL_QUEUE` back to `ray-workshop-queue` and resubmit.
+3. Fix `LOCAL_QUEUE` back to `ray-workshop-queue`, `cluster.down()` any stuck cluster, and retry.
 
 ## Scenario B — YAML (facilitator only)
 
@@ -35,11 +34,11 @@ oc describe localqueue -n ray-workshop
 ## Solution hints
 
 - Kueue events mention unknown or inactive queue names.
-- OOMKilled head pod → increase memory in `ManagedClusterConfig` or YAML.
+- OOMKilled head pod → increase memory in `ClusterConfiguration` or YAML.
 
 Delete when done:
 
 ```sh
-oc delete rayjob ray-workshop-broken -n ray-workshop
-oc delete rayjob ray-workshop-scale-data -n ray-workshop
+oc delete raycluster --all -n ray-workshop
+oc delete rayjob --all -n ray-workshop
 ```

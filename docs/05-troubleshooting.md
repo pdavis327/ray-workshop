@@ -13,19 +13,20 @@ Official guide: [Troubleshooting common problems with distributed workloads](htt
 | Symptom | Fix |
 |---------|-----|
 | No hardware profiles when creating workbench | Run `setup.sh -s 1` for `cpu-local-queue`; enable `disableKueue: false` |
-| `TokenAuthentication` / SSL errors | Use Console token; set `skip_tls=True` on lab clusters with self-signed certs |
-| `rayjobs.ray.io is forbidden` | Use your **user** token from Console Copy login command — not `oc whoami --show-token` inside the workbench (that is the workbench service account) |
-| RayJob Pending | Wrong `local_queue`; check `list_local_queues()` and `oc describe localqueue` |
+| `CERTIFICATE_VERIFY_FAILED` on API | Use Console token; set `verify_ssl=False` on `AuthConfig` for lab self-signed certs |
+| `system:anonymous` / forbidden | Fresh Console token; re-run auth cell after kernel restart (not workbench SA) |
+| RayCluster Suspended / no pods | Wrong `local_queue`; check `list_local_queues()` and `oc describe workload` |
 | `Default Local Queue not found` | Facilitator: run `setup.sh -s 1` or create LocalQueue in project |
-| `local_queue provided does not exist` | Match `local_queue=` to a real LocalQueue name (workshop default: `ray-workshop-queue`) |
+| `local_queue provided does not exist` | Match `local_queue=` to a real LocalQueue (workshop default: `ray-workshop-queue`) |
+| Job stuck PENDING on Ray | Check `client.get_job_logs()`; GPU/`num_workers` mismatch inside the script |
 | `ModuleNotFoundError: codeflare_sdk` | Use Standard Data Science image or `pip install codeflare-sdk` |
-| Job FAILED | `job.logs()` or head pod logs; check `runtime_env` pip deps |
+| Forgot to tear down | `cluster.down()` or `oc delete raycluster --all -n ray-workshop` |
 
 ### Reset between sessions
 
 ```sh
-oc delete rayjob --all -n ray-workshop
 oc delete raycluster --all -n ray-workshop
+oc delete rayjob --all -n ray-workshop
 ```
 
 ### Further reading

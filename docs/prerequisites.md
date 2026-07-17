@@ -133,9 +133,18 @@ In Kueue-managed projects, workbench profiles must use **`scheduling.type: Queue
 
 Create a GPU profile the same way as `cpu-local-queue`: Local queue strategy, LocalQueue name that exists in the project (e.g. `default`), plus GPU identifiers in `spec.identifiers`. Apply to `redhat-ods-applications`.
 
-### 4. CodeFlare RayJob — request GPUs
+### 4. CodeFlare — request GPUs on workers
 
-In `ManagedClusterConfig`, request accelerators on workers (from the [developer article](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue)):
+In `ClusterConfiguration` (workshop path) or `ManagedClusterConfig` (ephemeral RayJob), request accelerators on workers (from the [developer article](https://developers.redhat.com/articles/2025/12/03/tame-ray-workloads-openshift-ai-kuberay-and-kueue)):
+
+```python
+ClusterConfiguration(
+    # ...
+    worker_extended_resource_requests={"nvidia.com/gpu": 1},
+)
+```
+
+Or with ManagedClusterConfig:
 
 ```python
 ManagedClusterConfig(
@@ -144,6 +153,8 @@ ManagedClusterConfig(
     # ... cpu/memory requests ...
 )
 ```
+
+Omit GPU fields entirely for CPU-only labs (do not set `nvidia.com/gpu: 0`).
 
 Use a CUDA-capable Ray image per [Supported Configurations](https://access.redhat.com/articles/6856871).
 

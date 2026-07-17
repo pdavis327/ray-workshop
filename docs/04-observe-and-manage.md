@@ -18,23 +18,25 @@
 3. Run all cells — `list_local_queues()` and `view_clusters()`.
 4. Use Open Ray Dashboard / View Jobs from the widget UI.
 
+Tip: leave a Topic 2 or 3 cluster up (skip `cluster.down()`) so `view_clusters()` has something to show.
+
 ### Console (facilitator demo)
 
 | View | Highlight |
 |------|-----------|
-| Projects → ray-workshop | Workbench + workloads |
-| RayJobs | CRs created by CodeFlare |
-| Pods | `ray-head`, `ray-worker` during jobs |
-| LocalQueue | Kueue admission |
+| Projects → ray-workshop | Workbench + RayClusters |
+| Ray Dashboard → Jobs | Jobs from `job_client` |
+| Pods | `ray-head`, `ray-worker` while cluster is up |
+| LocalQueue | Kueue admission for the RayCluster |
 
 ```sh
-oc get rayjob,raycluster,pods -n ray-workshop
+oc get raycluster,pods -n ray-workshop
 oc describe localqueue ray-workshop-queue -n ray-workshop
 ```
 
 ### Key message
 
-> Data scientists stay in Jupyter. OpenShift AI and KubeRay handle Kubernetes, quotas, and cluster lifecycle.
+> Data scientists stay in Jupyter. OpenShift AI and KubeRay handle Kubernetes and quotas. Tear clusters down when finished.
 
 <p align="center">
 <a href="/docs/03-distributed-compute.md">Prev</a>

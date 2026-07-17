@@ -6,43 +6,45 @@ Based on [Overview of distributed workloads](https://docs.redhat.com/en/document
 
 ```
 Data scientist (Jupyter workbench)
-        ↓ CodeFlare SDK (TokenAuthentication)
-    RayJob CR  +  ManagedClusterConfig
+        ↓ CodeFlare SDK (AuthConfig + set_api_client)
+    Cluster + ClusterConfiguration  →  RayCluster CR
         ↓
     LocalQueue (namespace) → ClusterQueue (cluster)   [Kueue]
         ↓ admitted
     KubeRay operator → Ray head + worker pods
         ↓
-    Job completes → ephemeral cluster deleted
+    cluster.job_client.submit_job(...)  →  Ray Jobs API on the head
+        ↓
+    Job finishes → participant calls cluster.down()
 ```
 
 | CRD | Scope | Purpose |
 |-----|-------|---------|
 | LocalQueue | Namespace | Team/project queue; CodeFlare sets `local_queue=` |
 | ClusterQueue | Cluster | Quota pool; admits workloads |
-| ResourceFlavor | Cluster | Node pool type for quota (e.g. `default-flavor`, `nvidia-gpu-flavor`); see [GPU extension](/docs/prerequisites.md#optional-gpu-ray-workloads) |
-| RayJob | Namespace | Entrypoint + cluster spec or cluster reference |
-| RayCluster | Namespace | Long-running workspace (not used in this workshop) |
+| ResourceFlavor | Cluster | Node pool type for quota (e.g. `default-flavor`) |
+| RayCluster | Namespace | Workspace cluster for Topics 2–3 |
+| RayJob | Namespace | KubeRay job CR (facilitator YAML / production path; not the primary lab SDK path) |
 
-## Workshop path: ephemeral RayJob
+## Workshop path: workspace cluster + job client
 
-This workshop uses workflow 3 from the developer article — `RayJob` with embedded `ManagedClusterConfig`:
+This workshop uses a **long-lived workspace `RayCluster`** plus **`cluster.job_client`** (Ray Jobs API):
 
 1. Participant clones repo into workbench storage.
-2. `RayJob.submit()` creates a RayJob CR; Kueue admits via `ray-workshop-queue`.
-3. KubeRay creates head + workers; Ray packages `runtime_env.working_dir`.
-4. Script runs (`scale_data.py` or `distributed_stats.py`).
-5. Cluster tears down when the job finishes (`shutdownAfterJobFinishes`).
+2. `Cluster.apply()` creates a `RayCluster` CR; Kueue admits via `ray-workshop-queue`.
+3. KubeRay creates head + workers.
+4. `job_client.submit_job()` runs `scale_data.py` / `distributed_stats.py` with `runtime_env.working_dir`.
+5. Participant tears down with `cluster.down()`.
 
-## Other workflows (official, not in timed labs)
+Jobs appear in the **Ray Dashboard → Jobs** tab. They are not always Kubernetes `RayJob` CRs.
+
+## Other workflows (official)
 
 | Workflow | SDK | Use case |
 |----------|-----|----------|
-| Workspace cluster | `Cluster`, `ClusterConfiguration` | Interactive `ray.init(cluster_uri())` |
-| Job on workspace | `RayJob(cluster_name=...)` | Fast iteration without new cluster startup |
-| Ephemeral job | `RayJob` + `ManagedClusterConfig` | Batch / production runs (this workshop) |
-
-Explore workspace and widget flows via `copy_demo_nbs()` — see RHOAI section 4.1.
+| Workspace cluster + job client | `Cluster`, `job_client` | Interactive / lab iteration (**this workshop**) |
+| Job on workspace via RayJob CR | `RayJob(cluster_name=...)` | Platform-visible jobs on an existing cluster |
+| Ephemeral automated job | `RayJob` + `ManagedClusterConfig` | Batch / production (facilitator YAML; SDK path can hit TLS issues on self-signed lab APIs) |
 
 ## Facilitator YAML
 

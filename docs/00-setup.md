@@ -94,8 +94,8 @@ Continue to [Topic 1 — Workbench smoke test](/docs/01-workbench-smoke-test.md)
 | Notebook | Topic |
 |----------|--------|
 | `01-local-smoke.ipynb` | 1 |
-| `02-ray-data-rayjob.ipynb` | 2 — ephemeral RayJob |
-| `03-distributed-compute-rayjob.ipynb` | 3 — ephemeral RayJob |
+| `02-ray-data-job-client.ipynb` | 2 — cluster + job client |
+| `03-distributed-compute-job-client.ipynb` | 3 — cluster + job client |
 | `04-observe-and-manage.ipynb` | 4 — `view_clusters()` |
 
 Topics 2–4 prompt for OpenShift API credentials in the notebook when you need them.

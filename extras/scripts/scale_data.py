@@ -1,6 +1,6 @@
 """Ray Data lab: read Iris CSV, add petal area, write Parquet.
 
-Defaults suit CodeFlare RayJob runtime_env (repo packaged as working_dir):
+Defaults suit CodeFlare job_client runtime_env (repo packaged as working_dir):
   INPUT_PATH=extras/data/iris.csv
   OUTPUT_DIR=/tmp/ray-workshop-output/iris
 """
