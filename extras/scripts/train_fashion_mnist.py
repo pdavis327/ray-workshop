@@ -56,10 +56,10 @@ class NeuralNetwork(nn.Module):
         return self.linear_relu_stack(inputs)
 
 
-def get_dataset() -> datasets.FashionMNIST:
+def get_dataset(*, train: bool = True) -> datasets.FashionMNIST:
     return datasets.FashionMNIST(
         root="/tmp/data",
-        train=True,
+        train=train,
         download=True,
         transform=ToTensor(),
     )
@@ -67,6 +67,24 @@ def get_dataset() -> datasets.FashionMNIST:
 
 def _unwrap_model(model: nn.Module) -> nn.Module:
     return model.module if hasattr(model, "module") else model
+
+
+@torch.no_grad()
+def _evaluate(model: nn.Module, dataloader: DataLoader) -> tuple[float, float]:
+    """Return mean cross-entropy loss and accuracy over dataloader."""
+    model.eval()
+    criterion = nn.CrossEntropyLoss(reduction="sum")
+    total_loss = 0.0
+    correct = 0
+    total = 0
+    for inputs, labels in dataloader:
+        pred = model(inputs)
+        total_loss += float(criterion(pred, labels).item())
+        correct += int((pred.argmax(dim=1) == labels).sum().item())
+        total += labels.size(0)
+    if total == 0:
+        return 0.0, 0.0
+    return total_loss / total, correct / total
 
 
 def _configure_mlflow() -> tuple[str, str]:
@@ -109,9 +127,9 @@ def train_func_distributed(config: dict) -> None:
 
     _configure_mlflow()
 
-    dataset = get_dataset()
-    dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
-    dataloader = ray.train.torch.prepare_data_loader(dataloader)
+    train_dataset = get_dataset(train=True)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    train_loader = ray.train.torch.prepare_data_loader(train_loader)
 
     model = NeuralNetwork()
     model = ray.train.torch.prepare_model(model)
@@ -122,28 +140,46 @@ def train_func_distributed(config: dict) -> None:
     rank = ray.train.get_context().get_world_rank()
 
     for epoch in range(num_epochs):
+        model.train()
         if ray.train.get_context().get_world_size() > 1:
-            dataloader.sampler.set_epoch(epoch)
+            train_loader.sampler.set_epoch(epoch)
 
-        last_loss = None
-        for inputs, labels in dataloader:
+        running_loss = 0.0
+        correct = 0
+        total = 0
+        for inputs, labels in train_loader:
             optimizer.zero_grad()
             pred = model(inputs)
             loss = criterion(pred, labels)
             loss.backward()
             optimizer.step()
-            last_loss = loss.item()
 
-        print(f"epoch: {epoch}, loss: {last_loss}")
-        ray.train.report({"loss": last_loss})
+            batch_size = labels.size(0)
+            running_loss += float(loss.item()) * batch_size
+            correct += int((pred.argmax(dim=1) == labels).sum().item())
+            total += batch_size
 
-        if rank == 0 and last_loss is not None:
+        epoch_loss = running_loss / total if total else 0.0
+        epoch_acc = correct / total if total else 0.0
+        print(f"epoch: {epoch}, loss: {epoch_loss:.4f}, accuracy: {epoch_acc:.4f}")
+        ray.train.report({"loss": epoch_loss, "accuracy": epoch_acc})
+
+        if rank == 0:
             with mlflow.start_run(run_id=mlflow_run_id):
-                mlflow.log_metric("loss", float(last_loss), step=epoch)
+                mlflow.log_metric("loss", epoch_loss, step=epoch)
+                mlflow.log_metric("accuracy", epoch_acc, step=epoch)
 
     if rank == 0:
         unwrapped = _unwrap_model(model).cpu().eval()
+        test_loader = DataLoader(
+            get_dataset(train=False), batch_size=BATCH_SIZE, shuffle=False
+        )
+        test_loss, test_acc = _evaluate(unwrapped, test_loader)
+        print(f"test_loss: {test_loss:.4f}, test_accuracy: {test_acc:.4f}")
+
         with mlflow.start_run(run_id=mlflow_run_id):
+            mlflow.log_metric("test_loss", test_loss)
+            mlflow.log_metric("test_accuracy", test_acc)
             # Use pickle — MLflow 3.x defaults to pt2, which needs TensorSpec signatures.
             mlflow.pytorch.log_model(
                 unwrapped,

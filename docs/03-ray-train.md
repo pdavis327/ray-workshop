@@ -41,7 +41,7 @@ Also set `MLFLOW_TRACKING_INSECURE_TLS=true` on lab clusters with self-signed ce
 
 ### What happens
 
-`train_fashion_mnist.py` runs FashionMNIST on GPUs with Ray Train. The driver opens an MLflow run (params + tags). Rank 0 logs epoch `loss` and registers the model with `mlflow.pytorch.log_model`.
+`train_fashion_mnist.py` runs FashionMNIST on GPUs with Ray Train. The driver opens an MLflow run (params + tags). Rank 0 logs epoch `loss` / `accuracy`, final `test_loss` / `test_accuracy`, and registers the model with `mlflow.pytorch.log_model`.
 
 Serving the registered model (KServe) is out of scope — see [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).
 
@@ -55,8 +55,8 @@ Serving the registered model (KServe) is out of scope — see [kserve-workshop](
 
 - [ ] `cluster.wait_ready()` succeeds (2 GPU workers).
 - [ ] Job reaches `SUCCEEDED`.
-- [ ] Logs show epoch losses, `MLflow run_id=...`, and `Done. Ray Train FashionMNIST finished successfully.`
-- [ ] MLflow UI (workspace `ray-workshop`) shows the experiment and registered model.
+- [ ] Logs show epoch `loss`/`accuracy`, `test_accuracy`, `MLflow run_id=...`, and `Done. Ray Train FashionMNIST finished successfully.`
+- [ ] MLflow UI (workspace `ray-workshop`) shows the experiment (charts for loss + accuracy) and registered model.
 - [ ] `cluster.down()` completed.
 
 <p align="center">
