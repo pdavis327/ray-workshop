@@ -4,7 +4,7 @@ Hands-on workshop for [Ray-based distributed workloads on Red Hat OpenShift AI 3
 
 Audience: Data scientists and platform engineers evaluating OpenShift AI distributed workloads.
 
-Duration: About 85 minutes for Topics 0–5.
+Duration: About 85 minutes for Topics 0–4.
 
 If you are starting the workshop, open [Topic 0 — Setup](/docs/00-setup.md).
 
@@ -117,7 +117,7 @@ From the [Red Hat Developer article](https://developers.redhat.com/articles/2025
 
 | Workflow | SDK pattern | This workshop |
 |----------|-------------|---------------|
-| Long-running workspace + job client | `Cluster` + `cluster.job_client` | Topics 2–3 (primary path) |
+| Long-running workspace + job client | `Cluster` + `cluster.job_client` | Topics 1–3 (primary path) |
 | Job via RayJob CR on existing cluster | `RayJob(cluster_name=...)` | Not covered (SDK TLS issues on some lab APIs) |
 | Ephemeral automated job | `RayJob` + `ManagedClusterConfig` | Facilitator YAML / production reference |
 
@@ -149,10 +149,10 @@ Participants should be able to:
 | Step | Topic | Time |
 |------|--------|------|
 | [0 – Setup](/docs/00-setup.md) | Workbench, auth, clone repo | ~10 min |
-| [2 – Ray Data on cluster](/docs/02-ray-data-cluster.md) | `02-ray-data-job-client.ipynb` | ~25 min |
-| [3 – Distributed compute](/docs/03-distributed-compute.md) | `03-distributed-compute-job-client.ipynb` | ~20 min |
-| [4 – Ray Train](/docs/04-ray-train.md) | `04-ray-train-job-client.ipynb` | ~25 min |
-| [5 – Troubleshooting](/docs/05-troubleshooting.md) | Common issues | ~5 min |
+| [1 – Ray Data on cluster](/docs/01-ray-data-cluster.md) | `01-ray-data-job-client.ipynb` | ~25 min |
+| [2 – Distributed compute](/docs/02-distributed-compute.md) | `02-distributed-compute-job-client.ipynb` | ~20 min |
+| [3 – Ray Train](/docs/03-ray-train.md) | `03-ray-train-job-client.ipynb` | ~25 min |
+| [4 – Troubleshooting](/docs/04-troubleshooting.md) | Common issues | ~5 min |
 
 ## Facilitator automation
 

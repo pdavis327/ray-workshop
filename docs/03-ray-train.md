@@ -1,9 +1,9 @@
-# 4. Workspace cluster + job client — Ray Train
+# 3. Workspace cluster + job client — Ray Train
 
 <p align="center">
-<a href="/docs/03-distributed-compute.md">Prev</a>
+<a href="/docs/02-distributed-compute.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/05-troubleshooting.md">Next</a>
+<a href="/docs/04-troubleshooting.md">Next</a>
 </p>
 
 ### Objectives (~25 min)
@@ -14,8 +14,8 @@
 
 ### Hands-on
 
-1. In JupyterLab, open `ray-workshop/extras/notebooks/04-ray-train-job-client.ipynb`.
-2. Paste the same OpenShift Console **server** and **token** as [Topic 2](/docs/02-ray-data-cluster.md#hands-on).
+1. In JupyterLab, open `ray-workshop/extras/notebooks/03-ray-train-job-client.ipynb`.
+2. Paste the same OpenShift Console **server** and **token** as [Topic 1](/docs/01-ray-data-cluster.md#hands-on).
 3. Run all cells (create cluster → submit `train_fashion_mnist.py` → logs → `view_clusters()` → `cluster.down()`).
 
 ### What happens
@@ -38,7 +38,7 @@ Workers need egress (or pre-cached data) to download FashionMNIST on first run. 
 - [ ] `cluster.down()` completed.
 
 <p align="center">
-<a href="/docs/03-distributed-compute.md">Prev</a>
+<a href="/docs/02-distributed-compute.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/05-troubleshooting.md">Next</a>
+<a href="/docs/04-troubleshooting.md">Next</a>
 </p>

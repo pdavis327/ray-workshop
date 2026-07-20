@@ -6,7 +6,7 @@ Optional exercise (~10 min) for facilitators or advanced participants.
 
 ## Scenario A — notebook (participant path)
 
-In Topic 2 or 3, deliberately set a wrong queue:
+In Topic 1, 2, or 3, deliberately set a wrong queue:
 
 ```python
 LOCAL_QUEUE = "does-not-exist-queue"

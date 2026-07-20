@@ -1,9 +1,9 @@
-# 2. Workspace cluster + job client — Ray Data
+# 1. Workspace cluster + job client — Ray Data
 
 <p align="center">
 <a href="/docs/00-setup.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/03-distributed-compute.md">Next</a>
+<a href="/docs/02-distributed-compute.md">Next</a>
 </p>
 
 ### Objectives (~25 min)
@@ -17,7 +17,7 @@ Reference: [Running Ray workloads from Jupyter](https://docs.redhat.com/en/docum
 
 ### Hands-on
 
-1. In JupyterLab, open `ray-workshop/extras/notebooks/02-ray-data-job-client.ipynb`.
+1. In JupyterLab, open `ray-workshop/extras/notebooks/01-ray-data-job-client.ipynb`.
 2. When you reach the auth cell, get credentials from the **OpenShift Console** (not from `oc whoami` inside the workbench):
 
    - Console → your username → **Copy login command** → Display token
@@ -25,7 +25,7 @@ Reference: [Running Ray workloads from Jupyter](https://docs.redhat.com/en/docum
 
    Lab clusters with self-signed certificates use `AuthConfig(..., verify_ssl=False)`.
 
-3. Run all cells: auth → `list_local_queues()` → create cluster → submit job → `view_clusters()` → `cluster.down()` (or leave the cluster up for Topic 3).
+3. Run all cells: auth → `list_local_queues()` → create cluster → submit job → `view_clusters()` → `cluster.down()` (or leave the cluster up for Topic 2).
 
 ### Pattern (CodeFlare SDK)
 
@@ -79,10 +79,10 @@ cluster.down()
 - [ ] Job reaches `SUCCEEDED`.
 - [ ] Logs contain `Done. Wrote N parquet file(s)`.
 - [ ] `view_clusters()` shows the cluster (before tear-down).
-- [ ] `cluster.down()` completed (unless intentionally left up for Topic 3).
+- [ ] `cluster.down()` completed (unless intentionally left up for Topic 2).
 
 <p align="center">
 <a href="/docs/00-setup.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/03-distributed-compute.md">Next</a>
+<a href="/docs/02-distributed-compute.md">Next</a>
 </p>

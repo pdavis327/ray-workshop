@@ -1,7 +1,7 @@
-# 5. Troubleshooting
+# 4. Troubleshooting
 
 <p align="center">
-<a href="/docs/04-ray-train.md">Prev</a>
+<a href="/docs/03-ray-train.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
 <a href="/README.md">Next</a>
 </p>
@@ -36,7 +36,7 @@ oc delete rayjob --all -n ray-workshop
 - [docs/troubleshooting.md](/docs/troubleshooting.md)
 
 <p align="center">
-<a href="/docs/04-ray-train.md">Prev</a>
+<a href="/docs/03-ray-train.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
 <a href="/README.md">Next</a>
 </p>

@@ -23,7 +23,7 @@ Data scientist (Jupyter workbench)
 | LocalQueue | Namespace | Team/project queue; CodeFlare sets `local_queue=` |
 | ClusterQueue | Cluster | Quota pool; admits workloads |
 | ResourceFlavor | Cluster | Node pool type for quota (e.g. `default-flavor`) |
-| RayCluster | Namespace | Workspace cluster for Topics 2–3 |
+| RayCluster | Namespace | Workspace cluster for Topics 1–3 |
 | RayJob | Namespace | KubeRay job CR (facilitator YAML / production path; not the primary lab SDK path) |
 
 ## Workshop path: workspace cluster + job client
