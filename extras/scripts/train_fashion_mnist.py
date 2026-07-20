@@ -7,8 +7,9 @@ to download FashionMNIST on first run.
 Env:
   NUM_EPOCHS                 default 3
   NUM_WORKERS                default 2  (must match available GPU Ray workers)
-  MLFLOW_TRACKING_URI        required (e.g. http://mlflow-server.mlflow.svc.cluster.local:8080)
+  MLFLOW_TRACKING_URI        required (e.g. https://mlflow.redhat-ods-applications.svc:8443)
   MLFLOW_TRACKING_AUTH       default kubernetes-namespaced (OpenShift AI MLflow)
+  MLFLOW_TRACKING_INSECURE_TLS  set true for lab service-cert HTTPS
   MLFLOW_EXPERIMENT          default ray-workshop-fashion-mnist
   MLFLOW_REGISTERED_MODEL    default ray-workshop-fashion-mnist
 """
@@ -121,7 +122,7 @@ def main() -> None:
     if not tracking_uri:
         raise RuntimeError(
             "MLFLOW_TRACKING_URI is required "
-            "(e.g. http://mlflow-server.mlflow.svc.cluster.local:8080)"
+            "(e.g. https://mlflow.redhat-ods-applications.svc:8443)"
         )
 
     os.environ.setdefault("MLFLOW_TRACKING_AUTH", "kubernetes-namespaced")

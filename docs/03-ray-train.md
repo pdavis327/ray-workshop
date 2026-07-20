@@ -21,18 +21,25 @@
 4. Run all cells (create cluster → submit `train_fashion_mnist.py` → logs → `view_clusters()` → `cluster.down()`).
 5. Open the MLflow UI → experiment `ray-workshop-fashion-mnist` → confirm metrics and registered model `ray-workshop-fashion-mnist`.
 
-### MLflow URI (OpenShift AI)
+### MLflow URI (OpenShift AI 3.4 managed)
 
-From a terminal with cluster access:
+This workshop targets the **MLflow component** on the DataScienceCluster (service in `redhat-ods-applications`), not a standalone `mlflow-server` in a `mlflow` project.
+
+**Tracking API** (use this as `MLFLOW_TRACKING_URI` in the notebook):
 
 ```sh
-oc get svc mlflow-server -n mlflow \
-  -o go-template='{{.metadata.name}}.{{.metadata.namespace}}.svc.cluster.local:{{(index .spec.ports 0).port}}{{println}}'
+oc get mlflow mlflow -n redhat-ods-applications -o jsonpath='{.status.address.url}{"\n"}'
 ```
 
-Typical value: `http://mlflow-server.mlflow.svc.cluster.local:8080`.
+Typical value: `https://mlflow.redhat-ods-applications.svc:8443`
 
-The notebook passes `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` for MLflow deployed on OpenShift AI (same pattern as other OAI demos). Ray workers must be able to reach that service from the `ray-workshop` project.
+**UI** (browser):
+
+```sh
+oc get mlflow mlflow -n redhat-ods-applications -o jsonpath='{.status.url}{"\n"}'
+```
+
+The notebook passes `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` and `MLFLOW_TRACKING_INSECURE_TLS=true` so Ray workers can talk to the HTTPS service with the cluster service cert. Ray workers must reach `redhat-ods-applications` from the `ray-workshop` project.
 
 ### What happens
 
