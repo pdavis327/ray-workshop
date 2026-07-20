@@ -142,7 +142,7 @@ Participants should be able to:
 - Describe the OpenShift AI distributed workloads stack (CodeFlare, KubeRay, Kueue).
 - Authenticate with `AuthConfig` / `set_api_client`, discover queues with `list_local_queues()`, and inspect clusters with `view_clusters()`.
 - Create a GPU `RayCluster` and submit work with `cluster.job_client`, then tear down with `cluster.down()`.
-- Run distributed training with Ray Train (`TorchTrainer`) on FashionMNIST.
+- Run distributed training with Ray Train (`TorchTrainer`) on FashionMNIST and log results to **MLflow** (tracking + model registry).
 
 ## Lab sequence (~85 min)
 
@@ -151,7 +151,7 @@ Participants should be able to:
 | [0 – Setup](/docs/00-setup.md) | Workbench, auth, clone repo | ~10 min |
 | [1 – Ray Data on cluster](/docs/01-ray-data-cluster.md) | `01-ray-data-job-client.ipynb` | ~25 min |
 | [2 – Distributed compute](/docs/02-distributed-compute.md) | `02-distributed-compute-job-client.ipynb` | ~20 min |
-| [3 – Ray Train](/docs/03-ray-train.md) | `03-ray-train-job-client.ipynb` | ~25 min |
+| [3 – Ray Train + MLflow](/docs/03-ray-train.md) | `03-ray-train-job-client.ipynb` | ~25 min |
 | [4 – Troubleshooting](/docs/04-troubleshooting.md) | Common issues | ~5 min |
 
 ## Facilitator automation

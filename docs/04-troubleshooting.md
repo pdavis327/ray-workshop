@@ -20,7 +20,12 @@ Official guide: [Troubleshooting common problems with distributed workloads](htt
 | `local_queue provided does not exist` | Match `local_queue=` to a real LocalQueue (workshop default: `ray-workshop-queue`) |
 | Job stuck PENDING on Ray | Check `client.get_job_logs()`; GPU/`num_workers` mismatch inside the script |
 | Ray Train PENDING / never starts | `ScalingConfig.num_workers` must match GPU Ray workers (workshop: 2); do not use demo `num_workers=3` on a 2-GPU cluster |
+| Ray Train `WorkerGroupStartupTimeoutError` (then retries) | Cold start; notebook sets `RAY_TRAIN_WORKER_GROUP_START_TIMEOUT_S=120` |
 | Head `BackOff` / `OOMKilled` (exit 137) | Raise `head_memory_limits` (MODH Ray image often needs ≥8Gi); `cluster.down()` and re-apply |
+| `MLFLOW_TRACKING_URI is required` | Set URI in the Topic 3 notebook and pass it in `runtime_env.env_vars` |
+| Cannot connect to MLflow from Ray job | Use in-cluster URL (`mlflow-server.mlflow.svc...`); confirm NetworkPolicy allows `ray-workshop` → `mlflow`; set `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` |
+| MLflow 401 / auth errors | OpenShift AI MLflow needs `kubernetes-namespaced` auth; wrong URI/namespace |
+| No experiment / model in MLflow UI | Check job logs for `MLflow run_id=`; refresh UI; confirm experiment name `ray-workshop-fashion-mnist` |
 | `ModuleNotFoundError: codeflare_sdk` | Use Standard Data Science image or `pip install codeflare-sdk` |
 | Forgot to tear down | `cluster.down()` or `oc delete raycluster --all -n ray-workshop` |
 

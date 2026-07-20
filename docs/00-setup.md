@@ -95,7 +95,7 @@ Continue to [Topic 1 — Ray Data on cluster](/docs/01-ray-data-cluster.md).
 |----------|--------|
 | `01-ray-data-job-client.ipynb` | 1 — cluster + job client (+ `view_clusters`) |
 | `02-distributed-compute-job-client.ipynb` | 2 — cluster + job client |
-| `03-ray-train-job-client.ipynb` | 3 — Ray Train (GPU) |
+| `03-ray-train-job-client.ipynb` | 3 — Ray Train + MLflow (GPU) |
 
 Topics 1–3 prompt for OpenShift API credentials in the notebook when you need them.
 
