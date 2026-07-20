@@ -8,13 +8,15 @@
 
 Official guide: [Troubleshooting common problems with distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/troubleshooting-common-problems-with-distributed-workloads-for-users_distributed-workloads).
 
+Facilitator live tips: [cheat sheet](/docs/facilitator-cheat-sheet.md).
+
 ### Common issues
 
 | Symptom | Fix |
 |---------|-----|
 | No hardware profiles when creating workbench | Run `setup.sh -s 1` for `cpu-local-queue`; enable `disableKueue: false` |
 | `CERTIFICATE_VERIFY_FAILED` on API | Use Console token; set `verify_ssl=False` on `AuthConfig` for lab self-signed certs |
-| `system:anonymous` / forbidden | Fresh Console token; re-run auth cell after kernel restart (not workbench SA) |
+| `system:anonymous` / forbidden | Fresh Console **user** token (Copy login command) — not `oc whoami` / workbench SA |
 | RayCluster Suspended / no pods | Wrong `local_queue`; missing GPU quota; check `list_local_queues()` and `oc describe workload` |
 | `Default Local Queue not found` | Facilitator: run `setup.sh -s 1` or create LocalQueue in project |
 | `local_queue provided does not exist` | Match `local_queue=` to a real LocalQueue (workshop default: `ray-workshop-queue`) |
@@ -27,7 +29,23 @@ Official guide: [Troubleshooting common problems with distributed workloads](htt
 | Cannot connect to MLflow from Ray job | URI = `oc get mlflow ... -o jsonpath='{.status.url}'` (ends with `/mlflow`); set `MLFLOW_WORKSPACE=ray-workshop` and `MLFLOW_TRACKING_INSECURE_TLS=true` |
 | No experiment / model in MLflow UI | Check job logs for `MLflow run_id=`; open UI in workspace/project `ray-workshop` |
 | `ModuleNotFoundError: codeflare_sdk` | Use Standard Data Science image or `pip install codeflare-sdk` |
-| Forgot to tear down | `cluster.down()` or `oc delete raycluster --all -n ray-workshop` |
+| Forgot to tear down | `cluster.down()` (Topic 3) or `oc delete raycluster --all -n ray-workshop` |
+
+### Useful commands
+
+```python
+from codeflare_sdk import list_local_queues
+list_local_queues("ray-workshop")
+
+client = cluster.job_client
+client.get_job_status(submission_id)
+client.get_job_logs(submission_id)
+```
+
+```sh
+oc get raycluster,workload,localqueue -n ray-workshop
+oc logs -n ray-workshop -l ray.io/node-type=head -c ray-head --tail=200
+```
 
 ### Reset between sessions
 
@@ -35,10 +53,6 @@ Official guide: [Troubleshooting common problems with distributed workloads](htt
 oc delete raycluster --all -n ray-workshop
 oc delete rayjob --all -n ray-workshop
 ```
-
-### Further reading
-
-- [docs/troubleshooting.md](/docs/troubleshooting.md)
 
 <p align="center">
 <a href="/docs/03-ray-train.md">Prev</a>

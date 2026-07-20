@@ -22,7 +22,7 @@ Official procedure: [Running Ray-based distributed workloads from Jupyter notebo
 
 ## Facilitator checklist
 
-See [Prerequisites](/docs/prerequisites.md).
+See [Prerequisites](/docs/prerequisites.md) and the [facilitator cheat sheet](/docs/facilitator-cheat-sheet.md).
 
 - [ ] `ray` and `kueue` enabled on DataScienceCluster
 - [ ] `disableKueue: false` in OdhDashboardConfig
@@ -80,16 +80,11 @@ If CodeFlare is not in your image:
 pip install codeflare-sdk pyarrow pandas "ray[default]>=2.52"
 ```
 
-Optional — to explore official SDK demo notebooks, switch to a **new notebook** (File → New → Notebook), run this cell, then browse the copied files in the file browser:
-
-```python
-from codeflare_sdk import copy_demo_nbs
-copy_demo_nbs()
-```
-
 Continue to [Topic 1 — Ray Data on cluster](/docs/01-ray-data-cluster.md).
 
 ## Notebook order
+
+Workshop labs live under `extras/notebooks/` (not `demo-notebooks/`):
 
 | Notebook | Topic |
 |----------|--------|
@@ -98,6 +93,8 @@ Continue to [Topic 1 — Ray Data on cluster](/docs/01-ray-data-cluster.md).
 | `03-ray-train-job-client.ipynb` | 3 — Ray Train + MLflow (GPU) |
 
 Topics 1–3 prompt for OpenShift API credentials in the notebook when you need them.
+
+> Optional only: `copy_demo_nbs()` copies **official CodeFlare SDK demos** into `demo-notebooks/`. Those are **not** this workshop — labs are `extras/notebooks/01–03` above.
 
 <p align="center">
 <a href="/README.md">Prev</a>

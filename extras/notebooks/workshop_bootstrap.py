@@ -6,9 +6,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from codeflare_sdk import ClusterConfiguration
+    from codeflare_sdk import Cluster, ClusterConfiguration
 
 _REPO_MARKER = Path("extras/scripts/scale_data.py")
+
+# Shared across Topics 1–3 so participants reuse one RayCluster.
+WORKSHOP_CLUSTER_NAME = "ray-workshop"
 
 
 def setup_workshop_path() -> Path:
@@ -60,3 +63,33 @@ def workshop_cluster_configuration(
         worker_memory_limits=6,
         write_to_file=False,
     )
+
+
+def ensure_workshop_cluster(
+    namespace: str,
+    local_queue: str,
+    name: str = WORKSHOP_CLUSTER_NAME,
+) -> Cluster:
+    """Attach to an existing workshop RayCluster, or create one.
+
+    Topics 1–3 share ``ray-workshop``. ``apply()`` updates if present, creates
+    if missing. Tear down only at the end of Topic 3 (or when stuck).
+    """
+    from codeflare_sdk import Cluster, get_cluster
+
+    try:
+        cluster = get_cluster(cluster_name=name, namespace=namespace)
+        print(f"Attached to existing cluster {name!r} in {namespace!r}")
+    except Exception as exc:  # noqa: BLE001 — SDK raises various miss errors
+        print(f"No existing cluster {name!r} ({exc}); creating with workshop defaults")
+        cluster = Cluster(
+            workshop_cluster_configuration(
+                name=name,
+                namespace=namespace,
+                local_queue=local_queue,
+            )
+        )
+
+    cluster.apply()
+    cluster.wait_ready()
+    return cluster

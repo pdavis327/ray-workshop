@@ -8,26 +8,28 @@
 
 ### Objectives (~20 min)
 
+- Attach to the shared `ray-workshop` cluster (or create it if Topic 1 was skipped).
 - Submit a second job for Ray Core task parallelism (`@ray.remote`) via `job_client`.
 - Monitor with `client.get_job_status()` and `client.get_job_logs()`.
+- Leave the cluster up for Topic 3.
 
 ### Hands-on
 
 1. In JupyterLab, open `ray-workshop/extras/notebooks/02-distributed-compute-job-client.ipynb`.
 2. When you reach the auth cell, paste the same OpenShift Console **server** and **token** as [Topic 1](/docs/01-ray-data-cluster.md#hands-on).
-3. Run all cells (create cluster → submit → logs → `cluster.down()`).
+3. Run cells (attach/create cluster → submit → logs). **Skip tear-down** unless you are stopping early (Topic 3 tears down by default).
 
 ### What happens
 
 `distributed_stats.py` partitions the Iris CSV and runs `@ray.remote` tasks across workers. Results appear in job logs.
 
-Uses the same **2×GPU** `workshop_cluster_configuration` as Topic 1 (GPUs unused by this script but keep the workshop cluster shape consistent).
+Uses the same **2×GPU** shared cluster as Topic 1 (GPUs unused by this script but keep the workshop cluster shape consistent).
 
 ### Checklist
 
 - [ ] Job completes successfully.
 - [ ] Logs show partition summaries and `Aggregated row count: 30`.
-- [ ] Cluster torn down.
+- [ ] Cluster left up for Topic 3.
 
 ### Demo talking point
 

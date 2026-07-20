@@ -45,7 +45,7 @@ Per RHOAI docs, use a workbench image that includes the CodeFlare SDK — for ex
 | OpenShift API token + server | [Using the cluster server and token to authenticate](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/preparing-the-distributed-training-environment_distributed-workloads#using-the-cluster-server-and-token-to-authenticate_preparing-the-distributed-training-environment) |
 | LocalQueue in project | Facilitator `setup.sh -s 1` or dashboard-created project |
 
-Optional: explore official SDK demos with `from codeflare_sdk import copy_demo_nbs; copy_demo_nbs()` in the workbench.
+Optional: `copy_demo_nbs()` copies official CodeFlare SDK demos into `demo-notebooks/` — **not** the workshop path (`extras/notebooks/01–03`).
 
 ## Facilitator setup
 

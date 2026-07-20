@@ -23,6 +23,8 @@ Env:
 from __future__ import annotations
 
 import os
+import tempfile
+from pathlib import Path
 
 import mlflow
 import mlflow.pytorch
@@ -37,6 +39,19 @@ from torchvision.transforms import ToTensor
 
 BATCH_SIZE = 64
 LEARNING_RATE = 0.01
+NUM_CLASSES = 10
+FASHION_MNIST_CLASSES = (
+    "T-shirt/top",
+    "Trouser",
+    "Pullover",
+    "Dress",
+    "Coat",
+    "Sandal",
+    "Shirt",
+    "Sneaker",
+    "Bag",
+    "Ankle boot",
+)
 
 
 class NeuralNetwork(nn.Module):
@@ -77,7 +92,10 @@ def _evaluate(model: nn.Module, dataloader: DataLoader) -> tuple[float, float]:
     total_loss = 0.0
     correct = 0
     total = 0
+    device = next(model.parameters()).device
     for inputs, labels in dataloader:
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         pred = model(inputs)
         total_loss += float(criterion(pred, labels).item())
         correct += int((pred.argmax(dim=1) == labels).sum().item())
@@ -85,6 +103,23 @@ def _evaluate(model: nn.Module, dataloader: DataLoader) -> tuple[float, float]:
     if total == 0:
         return 0.0, 0.0
     return total_loss / total, correct / total
+
+
+@torch.no_grad()
+def _confusion_matrix(
+    model: nn.Module, dataloader: DataLoader, num_classes: int = NUM_CLASSES
+) -> torch.Tensor:
+    """Return [true, pred] confusion counts."""
+    model.eval()
+    device = next(model.parameters()).device
+    cm = torch.zeros(num_classes, num_classes, dtype=torch.int64)
+    for inputs, labels in dataloader:
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        preds = model(inputs).argmax(dim=1)
+        for true_label, pred_label in zip(labels.view(-1), preds.view(-1)):
+            cm[int(true_label), int(pred_label)] += 1
+    return cm
 
 
 def _configure_mlflow() -> tuple[str, str]:
@@ -139,14 +174,19 @@ def train_func_distributed(config: dict) -> None:
 
     rank = ray.train.get_context().get_world_rank()
 
+    # Non-distributed loaders for post-epoch eval (rank 0 only).
+    eval_train_loader = DataLoader(
+        get_dataset(train=True), batch_size=BATCH_SIZE, shuffle=False
+    )
+    eval_test_loader = DataLoader(
+        get_dataset(train=False), batch_size=BATCH_SIZE, shuffle=False
+    )
+
     for epoch in range(num_epochs):
         model.train()
         if ray.train.get_context().get_world_size() > 1:
             train_loader.sampler.set_epoch(epoch)
 
-        running_loss = 0.0
-        correct = 0
-        total = 0
         for inputs, labels in train_loader:
             optimizer.zero_grad()
             pred = model(inputs)
@@ -154,20 +194,45 @@ def train_func_distributed(config: dict) -> None:
             loss.backward()
             optimizer.step()
 
-            batch_size = labels.size(0)
-            running_loss += float(loss.item()) * batch_size
-            correct += int((pred.argmax(dim=1) == labels).sum().item())
-            total += batch_size
-
-        epoch_loss = running_loss / total if total else 0.0
-        epoch_acc = correct / total if total else 0.0
-        print(f"epoch: {epoch}, loss: {epoch_loss:.4f}, accuracy: {epoch_acc:.4f}")
-        ray.train.report({"loss": epoch_loss, "accuracy": epoch_acc})
-
+        # Post-epoch eval on rank 0, then broadcast so every worker reports
+        # the same metrics (Ray averages worker reports by default).
+        metrics_tensor = torch.zeros(4, device=next(model.parameters()).device)
         if rank == 0:
+            unwrapped = _unwrap_model(model)
+            train_loss, train_acc = _evaluate(unwrapped, eval_train_loader)
+            test_loss, test_acc = _evaluate(unwrapped, eval_test_loader)
+            metrics_tensor[0] = train_loss
+            metrics_tensor[1] = train_acc
+            metrics_tensor[2] = test_loss
+            metrics_tensor[3] = test_acc
+            print(
+                f"epoch: {epoch}, "
+                f"train_loss: {train_loss:.4f}, train_accuracy: {train_acc:.4f}, "
+                f"test_loss: {test_loss:.4f}, test_accuracy: {test_acc:.4f}"
+            )
             with mlflow.start_run(run_id=mlflow_run_id):
-                mlflow.log_metric("loss", epoch_loss, step=epoch)
-                mlflow.log_metric("accuracy", epoch_acc, step=epoch)
+                mlflow.log_metric("train_loss", train_loss, step=epoch)
+                mlflow.log_metric("train_accuracy", train_acc, step=epoch)
+                mlflow.log_metric("test_loss", test_loss, step=epoch)
+                mlflow.log_metric("test_accuracy", test_acc, step=epoch)
+
+        if ray.train.get_context().get_world_size() > 1:
+            torch.distributed.broadcast(metrics_tensor, src=0)
+
+        train_loss, train_acc, test_loss, test_acc = (
+            float(metrics_tensor[0]),
+            float(metrics_tensor[1]),
+            float(metrics_tensor[2]),
+            float(metrics_tensor[3]),
+        )
+        ray.train.report(
+            {
+                "train_loss": train_loss,
+                "train_accuracy": train_acc,
+                "test_loss": test_loss,
+                "test_accuracy": test_acc,
+            }
+        )
 
     if rank == 0:
         unwrapped = _unwrap_model(model).cpu().eval()
@@ -175,21 +240,50 @@ def train_func_distributed(config: dict) -> None:
             get_dataset(train=False), batch_size=BATCH_SIZE, shuffle=False
         )
         test_loss, test_acc = _evaluate(unwrapped, test_loader)
-        print(f"test_loss: {test_loss:.4f}, test_accuracy: {test_acc:.4f}")
+        cm = _confusion_matrix(unwrapped, test_loader)
+        print(f"final test_loss: {test_loss:.4f}, test_accuracy: {test_acc:.4f}")
 
-        with mlflow.start_run(run_id=mlflow_run_id):
-            mlflow.log_metric("test_loss", test_loss)
-            mlflow.log_metric("test_accuracy", test_acc)
-            # Use pickle — MLflow 3.x defaults to pt2, which needs TensorSpec signatures.
-            mlflow.pytorch.log_model(
-                unwrapped,
-                artifact_path="model",
-                registered_model_name=registered_model,
-                serialization_format="pickle",
-            )
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            checkpoint_path = tmp_path / "checkpoint.pt"
+            torch.save(unwrapped.state_dict(), checkpoint_path)
+
+            cm_path = tmp_path / "confusion_matrix.csv"
+            with cm_path.open("w", encoding="utf-8") as handle:
+                handle.write("true_class,pred_class,count\n")
+                for true_idx in range(NUM_CLASSES):
+                    for pred_idx in range(NUM_CLASSES):
+                        count = int(cm[true_idx, pred_idx].item())
+                        if count:
+                            handle.write(f"{true_idx},{pred_idx},{count}\n")
+
+            with mlflow.start_run(run_id=mlflow_run_id):
+                mlflow.log_metric("final_test_loss", test_loss)
+                mlflow.log_metric("final_test_accuracy", test_acc)
+                for class_idx in range(NUM_CLASSES):
+                    class_total = int(cm[class_idx].sum().item())
+                    class_correct = int(cm[class_idx, class_idx].item())
+                    class_acc = (
+                        class_correct / class_total if class_total else 0.0
+                    )
+                    mlflow.log_metric(f"class_correct_{class_idx}", class_correct)
+                    mlflow.log_metric(f"class_accuracy_{class_idx}", class_acc)
+                    mlflow.log_param(
+                        f"class_name_{class_idx}", FASHION_MNIST_CLASSES[class_idx]
+                    )
+
+                mlflow.log_artifact(str(checkpoint_path))
+                mlflow.log_artifact(str(cm_path))
+                # Use pickle — MLflow 3.x defaults to pt2, which needs TensorSpec signatures.
+                mlflow.pytorch.log_model(
+                    unwrapped,
+                    artifact_path="model",
+                    registered_model_name=registered_model,
+                    serialization_format="pickle",
+                )
         print(
-            f"MLflow: logged PyTorch model to run {mlflow_run_id}, "
-            f"registered_model_name={registered_model}"
+            f"MLflow: logged checkpoint.pt, confusion_matrix.csv, and PyTorch model "
+            f"to run {mlflow_run_id}, registered_model_name={registered_model}"
         )
 
 
