@@ -17,51 +17,46 @@
 
 1. In JupyterLab, open `ray-workshop/extras/notebooks/03-ray-train-job-client.ipynb`.
 2. Paste the same OpenShift Console **server** and **token** as [Topic 1](/docs/01-ray-data-cluster.md#hands-on).
-3. Set `MLFLOW_TRACKING_URI` to your in-cluster MLflow service (see below).
-4. Run all cells (create cluster → submit `train_fashion_mnist.py` → logs → `view_clusters()` → `cluster.down()`).
-5. Open the MLflow UI → experiment `ray-workshop-fashion-mnist` → confirm metrics and registered model `ray-workshop-fashion-mnist`.
+3. Confirm `MLFLOW_TRACKING_URI` matches your cluster’s MLflow UI URL (see below) and that `MLFLOW_TRACKING_TOKEN` uses that same user token.
+4. Run all cells (create cluster → submit → logs → `view_clusters()` → `cluster.down()`).
+5. Open the MLflow UI → workspace/project `ray-workshop` → experiment `ray-workshop-fashion-mnist`.
 
-### MLflow URI (OpenShift AI 3.4 managed)
+### MLflow URI and auth (OpenShift AI 3.4 managed)
 
-This workshop targets the **MLflow component** on the DataScienceCluster (service in `redhat-ods-applications`), not a standalone `mlflow-server` in a `mlflow` project.
+Official pattern: [Install and authenticate the MLflow SDK](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_mlflow/installing-and-authenticating-mlflow-sdk_mlflow).
 
-**Tracking API** (use this as `MLFLOW_TRACKING_URI` in the notebook):
-
-```sh
-oc get mlflow mlflow -n redhat-ods-applications -o jsonpath='{.status.address.url}{"\n"}'
-```
-
-Typical value: `https://mlflow.redhat-ods-applications.svc:8443`
-
-**UI** (browser):
+**Tracking URI** = dashboard MLflow URL (includes `/mlflow`):
 
 ```sh
 oc get mlflow mlflow -n redhat-ods-applications -o jsonpath='{.status.url}{"\n"}'
 ```
 
-The notebook passes `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` and `MLFLOW_TRACKING_INSECURE_TLS=true` so Ray workers can talk to the HTTPS service with the cluster service cert. Ray workers must reach `redhat-ods-applications` from the `ray-workshop` project.
+Example: `https://rh-ai.apps.cluster-kjpfb.kjpfb.sandbox5560.opentlc.com/mlflow`
+
+**Auth from a Ray job:** pass `MLFLOW_TRACKING_TOKEN` = your OpenShift **user** token and `MLFLOW_WORKSPACE` = `ray-workshop`.
+
+Do **not** rely on `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` inside Ray workers. OpenShift AI’s gateway rejects Kubernetes service-account tokens for MLflow (known issue RHOAIENG-44516). The workshop passes the same Console token already used for CodeFlare.
+
+Also set `MLFLOW_TRACKING_INSECURE_TLS=true` on lab clusters with self-signed certs. SDK: `mlflow[kubernetes]>=3.11`.
 
 ### What happens
 
 `train_fashion_mnist.py` runs FashionMNIST on GPUs with Ray Train. The driver opens an MLflow run (params + tags). Rank 0 logs epoch `loss` and registers the model with `mlflow.pytorch.log_model`.
 
-Workers need egress (or pre-cached data) for FashionMNIST, and network path to MLflow. Prefer a CUDA-capable Ray image from [Supported Configurations](https://access.redhat.com/articles/6856871); the notebook also installs `torch` / `torchvision` / `mlflow[kubernetes]` via `runtime_env.pip` when needed.
-
-Serving the registered model (KServe) is out of scope here — see the companion [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).
+Serving the registered model (KServe) is out of scope — see [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).
 
 ### Demo talking points
 
-- Platform layer (`Cluster`) vs application layer (`TorchTrainer` / Ray Train) vs experiment tracking (MLflow).
-- GPU requests belong on **workers**, not the head — do not set `nvidia.com/gpu: 0`.
-- `ScalingConfig.num_workers` must not exceed available GPU Ray workers or the job stays PENDING.
-- Only rank 0 writes MLflow metrics/model so you get one clean run, not duplicates.
+- Platform (`Cluster`) vs Train (`TorchTrainer`) vs tracking (MLflow).
+- MLflow workspace maps 1:1 to the OpenShift project (`ray-workshop`).
+- User token for MLflow API; SA tokens do not work through the RHOAI MLflow gateway.
 
 ### Checklist
 
 - [ ] `cluster.wait_ready()` succeeds (2 GPU workers).
 - [ ] Job reaches `SUCCEEDED`.
 - [ ] Logs show epoch losses, `MLflow run_id=...`, and `Done. Ray Train FashionMNIST finished successfully.`
-- [ ] MLflow UI shows experiment `ray-workshop-fashion-mnist` and registered model `ray-workshop-fashion-mnist`.
+- [ ] MLflow UI (workspace `ray-workshop`) shows the experiment and registered model.
 - [ ] `cluster.down()` completed.
 
 <p align="center">

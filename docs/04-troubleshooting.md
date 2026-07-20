@@ -22,10 +22,10 @@ Official guide: [Troubleshooting common problems with distributed workloads](htt
 | Ray Train PENDING / never starts | `ScalingConfig.num_workers` must match GPU Ray workers (workshop: 2); do not use demo `num_workers=3` on a 2-GPU cluster |
 | Ray Train `WorkerGroupStartupTimeoutError` (then retries) | Cold start; notebook sets `RAY_TRAIN_WORKER_GROUP_START_TIMEOUT_S=120` |
 | Head `BackOff` / `OOMKilled` (exit 137) | Raise `head_memory_limits` (MODH Ray image often needs ≥8Gi); `cluster.down()` and re-apply |
-| `kubernetes` package required for MLflow auth | Use `pip: ["mlflow[kubernetes]", ...]` in `runtime_env` (not bare `mlflow`) |
-| Cannot connect to MLflow from Ray job | Use managed URI `https://mlflow.redhat-ods-applications.svc:8443` (`oc get mlflow ... -o jsonpath='{.status.address.url}'`); set `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` and `MLFLOW_TRACKING_INSECURE_TLS=true` |
-| MLflow 401 / auth errors | OpenShift AI MLflow needs `kubernetes-namespaced` auth; wrong URI (old `mlflow-server.mlflow` pattern will not work on managed MLflow) |
-| No experiment / model in MLflow UI | Check job logs for `MLflow run_id=`; refresh UI; confirm experiment name `ray-workshop-fashion-mnist` |
+| `kubernetes` package / old MLflow pip | Use `pip: ["mlflow[kubernetes]>=3.11", ...]` |
+| `MLFLOW_TRACKING_TOKEN is required` / 401 / HTML login | Pass Console **user** token; do not use Ray SA + `kubernetes-namespaced` (RHOAIENG-44516) |
+| Cannot connect to MLflow from Ray job | URI = `oc get mlflow ... -o jsonpath='{.status.url}'` (ends with `/mlflow`); set `MLFLOW_WORKSPACE=ray-workshop` and `MLFLOW_TRACKING_INSECURE_TLS=true` |
+| No experiment / model in MLflow UI | Check job logs for `MLflow run_id=`; open UI in workspace/project `ray-workshop` |
 | `ModuleNotFoundError: codeflare_sdk` | Use Standard Data Science image or `pip install codeflare-sdk` |
 | Forgot to tear down | `cluster.down()` or `oc delete raycluster --all -n ray-workshop` |
 

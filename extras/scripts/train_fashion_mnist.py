@@ -1,15 +1,21 @@
 """Ray Train lab: FashionMNIST on GPUs via TorchTrainer + MLflow.
 
-Requires a RayCluster with enough GPU workers for ScalingConfig.num_workers
-(workshop default: 2 workers × 1 GPU). Workers need egress (or pre-cached data)
-to download FashionMNIST on first run.
+OpenShift AI managed MLflow (3.4+) requires:
+  MLFLOW_TRACKING_URI   https://<rhoai-dashboard-host>/mlflow
+  MLFLOW_TRACKING_TOKEN OpenShift user token (Console / oc whoami -t)
+  MLFLOW_WORKSPACE      OpenShift project name (e.g. ray-workshop)
+
+Do NOT use MLFLOW_TRACKING_AUTH=kubernetes-namespaced from Ray workers — the
+dashboard gateway rejects service-account tokens (RHOAIENG-44516). Pass the
+same user token you use for CodeFlare AuthConfig.
 
 Env:
   NUM_EPOCHS                 default 3
-  NUM_WORKERS                default 2  (must match available GPU Ray workers)
-  MLFLOW_TRACKING_URI        required (e.g. https://mlflow.redhat-ods-applications.svc:8443)
-  MLFLOW_TRACKING_AUTH       default kubernetes-namespaced (OpenShift AI MLflow)
-  MLFLOW_TRACKING_INSECURE_TLS  set true for lab service-cert HTTPS
+  NUM_WORKERS                default 2
+  MLFLOW_TRACKING_URI        required
+  MLFLOW_TRACKING_TOKEN      required
+  MLFLOW_WORKSPACE           default ray-workshop
+  MLFLOW_TRACKING_INSECURE_TLS  default true (lab self-signed certs)
   MLFLOW_EXPERIMENT          default ray-workshop-fashion-mnist
   MLFLOW_REGISTERED_MODEL    default ray-workshop-fashion-mnist
 """
@@ -63,13 +69,45 @@ def _unwrap_model(model: nn.Module) -> nn.Module:
     return model.module if hasattr(model, "module") else model
 
 
+def _configure_mlflow() -> tuple[str, str]:
+    """Configure MLflow for OpenShift AI managed tracking (token + workspace)."""
+    # Ray SA + kubernetes-namespaced fails at the RHOAI gateway — force token auth.
+    os.environ.pop("MLFLOW_TRACKING_AUTH", None)
+
+    tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "").strip()
+    token = os.environ.get("MLFLOW_TRACKING_TOKEN", "").strip()
+    workspace = os.environ.get("MLFLOW_WORKSPACE", "ray-workshop").strip()
+    os.environ.setdefault("MLFLOW_TRACKING_INSECURE_TLS", "true")
+
+    if not tracking_uri:
+        raise RuntimeError(
+            "MLFLOW_TRACKING_URI is required "
+            "(e.g. https://rh-ai.apps.EXAMPLE.com/mlflow)"
+        )
+    if not token:
+        raise RuntimeError(
+            "MLFLOW_TRACKING_TOKEN is required. Pass your OpenShift Console "
+            "user token (same as CodeFlare AuthConfig) — Ray service-account "
+            "tokens are not accepted by OpenShift AI MLflow."
+        )
+
+    os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
+    os.environ["MLFLOW_TRACKING_TOKEN"] = token
+    os.environ["MLFLOW_WORKSPACE"] = workspace
+
+    mlflow.set_tracking_uri(tracking_uri)
+    if hasattr(mlflow, "set_workspace"):
+        mlflow.set_workspace(workspace)
+
+    return tracking_uri, workspace
+
+
 def train_func_distributed(config: dict) -> None:
     num_epochs = int(os.environ.get("NUM_EPOCHS", "3"))
     mlflow_run_id = config["mlflow_run_id"]
     registered_model = config["registered_model"]
-    tracking_uri = config["tracking_uri"]
 
-    mlflow.set_tracking_uri(tracking_uri)
+    _configure_mlflow()
 
     dataset = get_dataset()
     dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
@@ -118,14 +156,7 @@ def train_func_distributed(config: dict) -> None:
 
 
 def main() -> None:
-    tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "").strip()
-    if not tracking_uri:
-        raise RuntimeError(
-            "MLFLOW_TRACKING_URI is required "
-            "(e.g. https://mlflow.redhat-ods-applications.svc:8443)"
-        )
-
-    os.environ.setdefault("MLFLOW_TRACKING_AUTH", "kubernetes-namespaced")
+    tracking_uri, workspace = _configure_mlflow()
 
     num_workers = int(os.environ.get("NUM_WORKERS", "2"))
     num_epochs = int(os.environ.get("NUM_EPOCHS", "3"))
@@ -134,12 +165,12 @@ def main() -> None:
         "MLFLOW_REGISTERED_MODEL", "ray-workshop-fashion-mnist"
     )
 
-    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(experiment)
 
     print(
         f"Starting TorchTrainer: num_workers={num_workers}, use_gpu=True, "
-        f"mlflow_experiment={experiment}"
+        f"mlflow_uri={tracking_uri}, workspace={workspace}, "
+        f"experiment={experiment}"
     )
 
     with mlflow.start_run(run_name="fashion-mnist-ray-train") as run:
@@ -148,6 +179,7 @@ def main() -> None:
                 "framework": "ray-train",
                 "dataset": "FashionMNIST",
                 "accelerator": "gpu",
+                "workspace": workspace,
             }
         )
         mlflow.log_param("num_workers", num_workers)
@@ -161,7 +193,6 @@ def main() -> None:
             train_loop_config={
                 "mlflow_run_id": run.info.run_id,
                 "registered_model": registered_model,
-                "tracking_uri": tracking_uri,
             },
             scaling_config=ScalingConfig(
                 num_workers=num_workers,
