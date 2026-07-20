@@ -45,7 +45,7 @@ The notebook passes `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` and `MLFLOW_TRA
 
 `train_fashion_mnist.py` runs FashionMNIST on GPUs with Ray Train. The driver opens an MLflow run (params + tags). Rank 0 logs epoch `loss` and registers the model with `mlflow.pytorch.log_model`.
 
-Workers need egress (or pre-cached data) for FashionMNIST, and network path to MLflow. Prefer a CUDA-capable Ray image from [Supported Configurations](https://access.redhat.com/articles/6856871); the notebook also installs `torch` / `torchvision` / `mlflow` via `runtime_env.pip` when needed.
+Workers need egress (or pre-cached data) for FashionMNIST, and network path to MLflow. Prefer a CUDA-capable Ray image from [Supported Configurations](https://access.redhat.com/articles/6856871); the notebook also installs `torch` / `torchvision` / `mlflow[kubernetes]` via `runtime_env.pip` when needed.
 
 Serving the registered model (KServe) is out of scope here — see the companion [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).
 
