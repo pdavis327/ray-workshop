@@ -142,12 +142,15 @@ def train_func_distributed(config: dict) -> None:
                 mlflow.log_metric("loss", float(last_loss), step=epoch)
 
     if rank == 0:
-        unwrapped = _unwrap_model(model).cpu()
+        unwrapped = _unwrap_model(model).cpu().eval()
+        # FashionMNIST: (N, 1, 28, 28). Required for MLflow pt2 / traced export.
+        input_example = torch.zeros(1, 1, 28, 28)
         with mlflow.start_run(run_id=mlflow_run_id):
             mlflow.pytorch.log_model(
                 unwrapped,
                 artifact_path="model",
                 registered_model_name=registered_model,
+                input_example=input_example,
             )
         print(
             f"MLflow: logged PyTorch model to run {mlflow_run_id}, "
