@@ -143,14 +143,13 @@ def train_func_distributed(config: dict) -> None:
 
     if rank == 0:
         unwrapped = _unwrap_model(model).cpu().eval()
-        # FashionMNIST: (N, 1, 28, 28). Required for MLflow pt2 / traced export.
-        input_example = torch.zeros(1, 1, 28, 28)
         with mlflow.start_run(run_id=mlflow_run_id):
+            # Use pickle — MLflow 3.x defaults to pt2, which needs TensorSpec signatures.
             mlflow.pytorch.log_model(
                 unwrapped,
                 artifact_path="model",
                 registered_model_name=registered_model,
-                input_example=input_example,
+                serialization_format="pickle",
             )
         print(
             f"MLflow: logged PyTorch model to run {mlflow_run_id}, "
