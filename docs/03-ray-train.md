@@ -3,7 +3,7 @@
 <p align="center">
 <a href="/docs/02-distributed-compute.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/04-troubleshooting.md">Next</a>
+<a href="/README.md">Next</a>
 </p>
 
 ### Objectives (~25 min)
@@ -75,5 +75,5 @@ After Train finishes, the driver/rank-0 path logs `train_*` / `test_*` metrics, 
 <p align="center">
 <a href="/docs/02-distributed-compute.md">Prev</a>
 &nbsp;&nbsp;&nbsp;
-<a href="/docs/04-troubleshooting.md">Next</a>
+<a href="/README.md">Next</a>
 </p>

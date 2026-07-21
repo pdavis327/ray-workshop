@@ -22,7 +22,7 @@ Official procedure: [Running Ray-based distributed workloads from Jupyter notebo
 
 ## Facilitator checklist
 
-See [Prerequisites](/docs/prerequisites.md) and the [facilitator cheat sheet](/docs/facilitator-cheat-sheet.md).
+See [Prerequisites](/docs/prerequisites.md).
 
 - [ ] `ray` and `kueue` enabled on DataScienceCluster
 - [ ] `disableKueue: false` in OdhDashboardConfig

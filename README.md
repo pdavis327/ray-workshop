@@ -3,7 +3,7 @@
 Hands-on workshop for [Ray-based distributed workloads on Red Hat OpenShift AI 3.4](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/running-ray-based-distributed-workloads_distributed-workloads), using the CodeFlare SDK with KubeRay and Kueue.
 
 **Audience:** data scientists and platform engineers  
-**Duration:** ~85 minutes (Topics 0–4)  
+**Duration:** ~80 minutes (Topics 0–3)  
 **Namespace:** `ray-workshop`
 
 **Start here → [Topic 0 — Setup](/docs/00-setup.md)**
@@ -16,7 +16,6 @@ Hands-on workshop for [Ray-based distributed workloads on Red Hat OpenShift AI 3
 | [1 – Ray Data](/docs/01-ray-data-cluster.md) | Shared cluster + `job_client` | `01-ray-data-job-client.ipynb` |
 | [2 – Distributed compute](/docs/02-distributed-compute.md) | Ray Core `@ray.remote` | `02-distributed-compute-job-client.ipynb` |
 | [3 – Ray Train + MLflow](/docs/03-ray-train.md) | GPU Train, metrics, registry | `03-ray-train-job-client.ipynb` |
-| [4 – Troubleshooting](/docs/04-troubleshooting.md) | Common failures | — |
 
 Topics 1–3 reuse one GPU RayCluster named `ray-workshop` (same `ClusterConfiguration` in each notebook). Tear down at the end of Topic 3.
 
@@ -55,7 +54,7 @@ Serving is out of scope — continue with [kserve-workshop](https://github.com/r
 
 ## Facilitator
 
-Live delivery: [facilitator cheat sheet](/docs/facilitator-cheat-sheet.md). Platform prep: [prerequisites](/docs/prerequisites.md).
+Platform prep: [prerequisites](/docs/prerequisites.md). Optional stretch: [diagnose a stuck queue](/docs/challenges/broken_rayjob.md). Official failures guide: [Troubleshooting distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_distributed_workloads/troubleshooting-common-problems-with-distributed-workloads-for-users_distributed-workloads).
 
 ```sh
 CLUSTER_QUEUE=default bash scripts/setup.sh -s 1
