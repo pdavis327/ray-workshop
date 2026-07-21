@@ -18,7 +18,7 @@ Hands-on workshop for [Ray-based distributed workloads on Red Hat OpenShift AI 3
 | [3 – Ray Train + MLflow](/docs/03-ray-train.md) | GPU Train, metrics, registry | `03-ray-train-job-client.ipynb` |
 | [4 – Troubleshooting](/docs/04-troubleshooting.md) | Common failures | — |
 
-Topics 1–3 reuse one GPU RayCluster named `ray-workshop` (`ensure_workshop_cluster`). Tear down at the end of Topic 3.
+Topics 1–3 reuse one GPU RayCluster named `ray-workshop` (same `ClusterConfiguration` in each notebook). Tear down at the end of Topic 3.
 
 ## What you will use
 

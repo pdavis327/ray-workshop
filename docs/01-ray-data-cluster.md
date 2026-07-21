@@ -9,7 +9,7 @@
 ### Objectives (~25 min)
 
 - Discover LocalQueues with `list_local_queues()`.
-- Attach or create the shared `ray-workshop` RayCluster (`ensure_workshop_cluster`).
+- Create or reuse the shared `ray-workshop` RayCluster (`Cluster` + `apply` + `wait_ready`).
 - Submit `scale_data.py` with `cluster.job_client`.
 - Inspect with `view_clusters()` (Ray Dashboard → Jobs).
 - Leave the cluster up for Topics 2–3.
@@ -26,14 +26,16 @@ Reference: [Running Ray workloads from Jupyter](https://docs.redhat.com/en/docum
 
    Lab clusters with self-signed certificates use `AuthConfig(..., verify_ssl=False)`.
 
-3. Run cells: auth → `list_local_queues()` → `ensure_workshop_cluster` → submit job → `view_clusters()`. **Skip tear-down** unless you are stopping for the day (Topic 3 tears down by default).
+3. Run cells: auth → `list_local_queues()` → create/reuse cluster → submit job → `view_clusters()`. **Skip tear-down** unless you are stopping for the day (Topic 3 tears down by default).
 
 ### Pattern (CodeFlare SDK)
 
 ```python
 from kube_authkit import AuthConfig, get_k8s_client
-from codeflare_sdk import set_api_client, list_local_queues, view_clusters
-from workshop_bootstrap import ensure_workshop_cluster
+from codeflare_sdk import (
+    set_api_client, list_local_queues, view_clusters,
+    Cluster, ClusterConfiguration,
+)
 
 set_api_client(get_k8s_client(config=AuthConfig(
     method="openshift",
@@ -44,10 +46,15 @@ set_api_client(get_k8s_client(config=AuthConfig(
 
 list_local_queues("ray-workshop")
 
-cluster = ensure_workshop_cluster(
+cluster = Cluster(ClusterConfiguration(
+    name="ray-workshop",
     namespace="ray-workshop",
     local_queue="ray-workshop-queue",
-)
+    num_workers=2,
+    # … CPU/memory + worker nvidia.com/gpu: 1 (see notebook)
+))
+cluster.apply()   # creates if missing, updates if present
+cluster.wait_ready()
 
 client = cluster.job_client
 submission_id = client.submit_job(
@@ -64,16 +71,15 @@ view_clusters("ray-workshop")
 ### Demo talking points
 
 - Data scientist defines resources in Python — no Kubernetes YAML.
-- Default cluster shape: **2 workers × 1 GPU** (`workshop_cluster_configuration` / `ensure_workshop_cluster`).
+- Default cluster shape: **2 workers × 1 GPU** (same `ClusterConfiguration` in Topics 1–3).
 - Topics 1–3 share one cluster named `ray-workshop` to save GPU wait time.
 - Kueue admits the **RayCluster** when `ClusterQueue` quota allows (including GPU quota).
 - `job_client` submits to the Ray head (Jobs API); watch status in the notebook or Ray Dashboard → Jobs.
-- `list_local_queues()` / `view_clusters()` keep discovery and status in the notebook.
 
 ### Checklist
 
 - [ ] `list_local_queues()` shows `ray-workshop-queue`.
-- [ ] `ensure_workshop_cluster` / `wait_ready` succeeds.
+- [ ] `cluster.wait_ready()` succeeds.
 - [ ] Job reaches `SUCCEEDED`.
 - [ ] Logs contain `Done. Wrote N parquet file(s)`.
 - [ ] `view_clusters()` shows `ray-workshop`.

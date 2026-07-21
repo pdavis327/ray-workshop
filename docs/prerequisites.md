@@ -64,7 +64,7 @@ HARDWARE_PROFILE_LOCAL_QUEUE=ray-workshop-queue CLUSTER_QUEUE=default bash scrip
 
 ## GPU Ray workloads
 
-**Required for this workshop.** Labs use `workshop_cluster_configuration()` — 2 workers with `worker_extended_resource_requests={"nvidia.com/gpu": 1}` each. Facilitators must align three layers. Official references: [Managing distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-distributed-workloads_managing-rhoai), [hardware profiles](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_accelerators/working-with-hardware-profiles_accelerators).
+**Required for this workshop.** Labs use an inline `ClusterConfiguration` — 2 workers with `worker_extended_resource_requests={"nvidia.com/gpu": 1}` each. Facilitators must align three layers. Official references: [Managing distributed workloads](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/managing_openshift_ai/managing-distributed-workloads_managing-rhoai), [hardware profiles](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_accelerators/working-with-hardware-profiles_accelerators).
 
 ### How the pieces connect
 
@@ -154,7 +154,7 @@ ManagedClusterConfig(
 )
 ```
 
-Omit GPU fields on the **head**. Do not set `nvidia.com/gpu: 0` (can break admission). Workshop default is workers-only GPUs via `workshop_cluster_configuration()`.
+Omit GPU fields on the **head**. Do not set `nvidia.com/gpu: 0` (can break admission). Workshop default is workers-only GPUs in each Topic 1–3 notebook `ClusterConfiguration`.
 
 Use a CUDA-capable Ray image per [Supported Configurations](https://access.redhat.com/articles/6856871).
 

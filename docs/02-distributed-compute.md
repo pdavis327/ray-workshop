@@ -8,7 +8,7 @@
 
 ### Objectives (~20 min)
 
-- Attach to the shared `ray-workshop` cluster (or create it if Topic 1 was skipped).
+- Create or reuse the shared `ray-workshop` cluster (same `ClusterConfiguration` as Topic 1).
 - Submit a second job for Ray Core task parallelism (`@ray.remote`) via `job_client`.
 - Monitor with `client.get_job_status()` and `client.get_job_logs()`.
 - Leave the cluster up for Topic 3.
@@ -17,7 +17,7 @@
 
 1. In JupyterLab, open `ray-workshop/extras/notebooks/02-distributed-compute-job-client.ipynb`.
 2. When you reach the auth cell, paste the same OpenShift Console **server** and **token** as [Topic 1](/docs/01-ray-data-cluster.md#hands-on).
-3. Run cells (attach/create cluster → submit → logs). **Skip tear-down** unless you are stopping early (Topic 3 tears down by default).
+3. Run cells (create/reuse cluster → submit → logs). **Skip tear-down** unless you are stopping early (Topic 3 tears down by default).
 
 ### What happens
 

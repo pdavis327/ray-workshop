@@ -7,7 +7,7 @@ Based on [Overview of distributed workloads](https://docs.redhat.com/en/document
 ```
 Data scientist (Jupyter workbench)
         ↓ CodeFlare SDK (AuthConfig + set_api_client)
-    ensure_workshop_cluster → RayCluster CR (name: ray-workshop)
+    Cluster + ClusterConfiguration → RayCluster CR (name: ray-workshop)
         ↓
     LocalQueue (namespace) → ClusterQueue (cluster)   [Kueue]
         ↓ admitted
@@ -26,7 +26,7 @@ Data scientist (Jupyter workbench)
 | RayJob | Namespace | Facilitator YAML / production path — not the primary lab SDK path |
 
 1. Participant clones repo into workbench storage.
-2. `ensure_workshop_cluster()` attaches or creates shared `RayCluster` `ray-workshop`; Kueue admits via `ray-workshop-queue`.
+2. `Cluster.apply()` creates or updates shared `RayCluster` `ray-workshop`; Kueue admits via `ray-workshop-queue`.
 3. KubeRay creates head + workers (reused across Topics 1–3).
 4. `job_client.submit_job()` runs topic scripts with `runtime_env.working_dir`.
 5. Participant tears down with `cluster.down()` at the end of Topic 3.

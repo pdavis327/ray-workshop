@@ -8,7 +8,7 @@
 
 ### Objectives (~25 min)
 
-- Attach or create the shared GPU `RayCluster` (`ray-workshop` via `ensure_workshop_cluster`).
+- Attach or create the shared GPU `RayCluster` (`ray-workshop` via `Cluster.apply()`).
 - Submit distributed training with Ray Train `TorchTrainer` via `cluster.job_client`.
 - Match `ScalingConfig(num_workers=2, use_gpu=True)` to the cluster GPU layout.
 - Log params/metrics to **MLflow**, save a `checkpoint.pt` artifact, log confusion counts, and register the PyTorch model.
@@ -19,7 +19,7 @@
 1. In JupyterLab, open `ray-workshop/extras/notebooks/03-ray-train-job-client.ipynb`.
 2. Paste the same OpenShift Console **server** and **token** as [Topic 1](/docs/01-ray-data-cluster.md#hands-on).
 3. Confirm `MLFLOW_TRACKING_URI` matches your cluster’s MLflow UI URL (see below) and that `MLFLOW_TRACKING_TOKEN` uses that same user token.
-4. Run all cells (attach/create cluster → submit → logs → `view_clusters()` → `cluster.down()`).
+4. Run all cells (create/reuse cluster → submit → logs → `view_clusters()` → `cluster.down()`).
 5. Open the MLflow UI → workspace/project `ray-workshop` → experiment `ray-workshop-fashion-mnist`.
 
 ### MLflow URI and auth (OpenShift AI 3.4 managed)
@@ -58,7 +58,7 @@ Serving the registered model (KServe) is out of scope — see [kserve-workshop](
 
 ### Checklist
 
-- [ ] `ensure_workshop_cluster` / `wait_ready` succeeds (2 GPU workers).
+- [ ] `cluster.wait_ready()` succeeds (2 GPU workers).
 - [ ] Job reaches `SUCCEEDED`.
 - [ ] Logs show epoch `train_*` / `test_*`, `final test_accuracy`, `MLflow run_id=...`, and `Done. Ray Train FashionMNIST finished successfully.`
 - [ ] MLflow UI (workspace `ray-workshop`) shows charts, `checkpoint.pt`, confusion artifact, and registered model.

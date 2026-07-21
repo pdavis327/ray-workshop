@@ -1,6 +1,6 @@
 # Challenge: diagnose a stuck RayCluster (facilitator / advanced)
 
-> Optional stretch. The main workshop path is `ensure_workshop_cluster` + `job_client`.
+> Optional stretch. The main workshop path is `Cluster` + `job_client`.
 
 Optional exercise (~10 min) for facilitators or advanced participants.
 
@@ -12,7 +12,7 @@ In Topic 1, 2, or 3, deliberately set a wrong queue:
 LOCAL_QUEUE = "does-not-exist-queue"
 ```
 
-1. Re-run `ensure_workshop_cluster(...)` (or `cluster.apply()`) and observe the RayCluster stay suspended / never ready.
+1. Re-run `cluster.apply()` / `wait_ready()` and observe the RayCluster stay suspended / never ready.
 2. Inspect:
 
 ```sh
@@ -21,7 +21,7 @@ oc describe workload <name> -n ray-workshop
 oc describe localqueue -n ray-workshop
 ```
 
-3. Fix `LOCAL_QUEUE` back to `ray-workshop-queue`, `cluster.down()` any stuck cluster, and retry `ensure_workshop_cluster`.
+3. Fix `LOCAL_QUEUE` back to `ray-workshop-queue`, `cluster.down()` any stuck cluster, and retry `cluster.apply()`.
 
 ## Scenario B — YAML (facilitator only)
 

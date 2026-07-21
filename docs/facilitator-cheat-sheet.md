@@ -4,7 +4,7 @@ Quick reference for live delivery. Participants follow Topics [0](/docs/00-setup
 
 ## Timing tip
 
-Topics **1–3 share one RayCluster** named `ray-workshop` (`ensure_workshop_cluster`). Leave it up after Topics 1–2; tear down at the end of Topic 3. Saves GPU admission wait between labs.
+Topics **1–3 share one RayCluster** named `ray-workshop` (same `Cluster` + `ClusterConfiguration` in each notebook). Leave it up after Topics 1–2; tear down at the end of Topic 3. Saves GPU admission wait between labs.
 
 ## Expected job log lines
 
