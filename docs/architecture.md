@@ -33,6 +33,18 @@ Data scientist (Jupyter workbench)
 
 Jobs appear in the **Ray Dashboard → Jobs** tab. They are not always Kubernetes `RayJob` CRs.
 
+## How Topics 1–3 differ (Ray libraries)
+
+Platform layer is identical: shared `ray-workshop` RayCluster + `job_client` + `runtime_env` (`working_dir` / `pip` / `env_vars` on existing pods).
+
+| Topic | Library | Script | Ray is doing |
+|-------|---------|--------|--------------|
+| [1](/docs/01-ray-data-cluster.md) | **Ray Data** | `scale_data.py` | Dataset pipeline: read CSV, transform batches, write Parquet |
+| [2](/docs/02-distributed-compute.md) | **Ray Core** | `distributed_stats.py` | Fan-out `@ray.remote` tasks; gather results with `ray.get` |
+| [3](/docs/03-ray-train.md) | **Ray Train** | `train_fashion_mnist.py` | Multi-worker `TorchTrainer` (DDP) on GPUs; MLflow is separate tracking |
+
+MLflow in Topic 3 is experiment tracking / registry — not a Ray library.
+
 ## Other CodeFlare workflows (not this lab)
 
 | Workflow | SDK | Notes |

@@ -19,11 +19,15 @@
 2. When you reach the auth cell, paste the same OpenShift Console **server** and **token** as [Topic 1](/docs/01-ray-data-cluster.md#hands-on).
 3. Run cells (create/reuse cluster → submit → logs). **Skip tear-down** unless you are stopping early (Topic 3 tears down by default).
 
-### What happens
+### What Ray is doing
 
-`distributed_stats.py` partitions the Iris CSV and runs `@ray.remote` tasks across workers. Results appear in job logs.
+1. **Platform:** Same as Topic 1 — shared `ray-workshop` cluster + `job_client` (no new pods per job). See [architecture](/docs/architecture.md).
+2. **Library (this topic): Ray Core** inside [`extras/scripts/distributed_stats.py`](/extras/scripts/distributed_stats.py):
+   - Split Iris rows into partitions
+   - `@ray.remote` `summarize_partition(...)` — one task per partition on workers
+   - `ray.get(...)` — collect summaries and aggregate counts
 
-Uses the same **2×GPU** shared cluster as Topic 1 (GPUs unused by this script but keep the workshop cluster shape consistent).
+**Unlike Topic 1** (Ray Data dataset pipeline) you write explicit remote functions. **Unlike Topic 3** there is no Train/DDP or MLflow — just general distributed Python. GPUs on the shared cluster are unused here on purpose (same cluster shape for Topics 1–3).
 
 ### Checklist
 

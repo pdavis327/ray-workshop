@@ -28,6 +28,18 @@ Reference: [Running Ray workloads from Jupyter](https://docs.redhat.com/en/docum
 
 3. Run cells: auth → `list_local_queues()` → create/reuse cluster → submit job → `view_clusters()`. **Skip tear-down** unless you are stopping for the day (Topic 3 tears down by default).
 
+### What Ray is doing
+
+Two layers:
+
+1. **Platform (same in Topics 1–3):** CodeFlare creates the shared `ray-workshop` RayCluster (head + worker pods). `job_client.submit_job()` runs a script on that cluster via the Ray Jobs API. See [architecture](/docs/architecture.md).
+2. **Library (this topic): Ray Data** inside [`extras/scripts/scale_data.py`](/extras/scripts/scale_data.py):
+   - `ray.data.read_csv(...)` — load Iris into a Ray Dataset
+   - `ds.map_batches(compute_area, ...)` — add `petal_area` across batches on workers
+   - write Parquet under `/tmp/...` on the cluster
+
+**Unlike Topic 2** (hand-written `@ray.remote` tasks) or **Topic 3** (Ray Train / GPUs), Topic 1 is a **data pipeline** API — Ray schedules the map work; you do not invent task fan-out yourself. Topic 1 is also the first full walkthrough of queues, cluster create, and `view_clusters()`.
+
 ### Pattern (CodeFlare SDK)
 
 ```python

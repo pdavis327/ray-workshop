@@ -86,11 +86,13 @@ Continue to [Topic 1 — Ray Data on cluster](/docs/01-ray-data-cluster.md).
 
 Workshop labs live under `extras/notebooks/` (not `demo-notebooks/`):
 
-| Notebook | Topic |
-|----------|--------|
-| `01-ray-data-job-client.ipynb` | 1 — cluster + job client (+ `view_clusters`) |
-| `02-distributed-compute-job-client.ipynb` | 2 — cluster + job client |
-| `03-ray-train-job-client.ipynb` | 3 — Ray Train + MLflow (GPU) |
+| Notebook | Topic | Ray library |
+|----------|--------|-------------|
+| `01-ray-data-job-client.ipynb` | 1 — cluster + job client (+ `view_clusters`) | **Ray Data** |
+| `02-distributed-compute-job-client.ipynb` | 2 — cluster + job client | **Ray Core** (`@ray.remote`) |
+| `03-ray-train-job-client.ipynb` | 3 — GPU Train + MLflow | **Ray Train** (+ MLflow tracking) |
+
+Same RayCluster / `job_client` platform in all three; different libraries inside each script. See [How the labs differ](/README.md#how-the-labs-differ).
 
 Topics 1–3 prompt for OpenShift API credentials in the notebook when you need them.
 

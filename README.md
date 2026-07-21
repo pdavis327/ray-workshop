@@ -20,6 +20,20 @@ Hands-on workshop for [Ray-based distributed workloads on Red Hat OpenShift AI 3
 
 Topics 1–3 reuse one GPU RayCluster named `ray-workshop` (same `ClusterConfiguration` in each notebook). Tear down at the end of Topic 3.
 
+## How the labs differ
+
+**Same platform every time:** CodeFlare creates a RayCluster (head + worker pods), then `job_client.submit_job()` runs a Python script on that cluster via the Ray Jobs API. `runtime_env` ships your repo and optional `pip` packages onto the existing pods — it does not build a new container per job.
+
+**Different Ray library inside each script:**
+
+| Topic | Script | Ray library | What the job does |
+|-------|--------|-------------|-------------------|
+| 1 | `scale_data.py` | **Ray Data** | `read_csv` → `map_batches` → write Parquet |
+| 2 | `distributed_stats.py` | **Ray Core** | `@ray.remote` tasks on CSV partitions |
+| 3 | `train_fashion_mnist.py` | **Ray Train** (+ MLflow) | `TorchTrainer` on 2 GPUs; log metrics and register a model |
+
+Details: [architecture](/docs/architecture.md) and Topics [1](/docs/01-ray-data-cluster.md)–[3](/docs/03-ray-train.md).
+
 ## What you will use
 
 | Piece | Role in this workshop |

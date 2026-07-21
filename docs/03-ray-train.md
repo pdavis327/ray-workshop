@@ -22,6 +22,17 @@
 4. Run all cells (create/reuse cluster → submit → logs → `view_clusters()` → `cluster.down()`).
 5. Open the MLflow UI → workspace/project `ray-workshop` → experiment `ray-workshop-fashion-mnist`.
 
+### What Ray is doing
+
+1. **Platform:** Same shared `ray-workshop` RayCluster + `job_client` as Topics 1–2. `runtime_env.pip` installs `torch` / `torchvision` / `mlflow` into the job env on those pods. See [architecture](/docs/architecture.md).
+2. **Library (this topic): Ray Train** inside [`extras/scripts/train_fashion_mnist.py`](/extras/scripts/train_fashion_mnist.py):
+   - `TorchTrainer` + `ScalingConfig(num_workers=2, use_gpu=True)` — one Train worker per GPU Ray worker
+   - `prepare_model` / `prepare_data_loader` — distributed data-parallel training loop
+   - Post-epoch eval metrics; final `checkpoint.pt` + confusion counts
+3. **MLflow (not a Ray library):** params/metrics/artifacts and `mlflow.pytorch.log_model` → Model Registry. Tracking uses the dashboard URI + your **user** token.
+
+**Unlike Topics 1–2**, this job uses the GPUs and the Train API (not Ray Data or bare `@ray.remote`). Checkpoint = raw weights; registered model = promotion artifact. Serving (KServe) is out of scope — see [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).
+
 ### MLflow URI and auth (OpenShift AI 3.4 managed)
 
 Official pattern: [Install and authenticate the MLflow SDK](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_mlflow/installing-and-authenticating-mlflow-sdk_mlflow).
@@ -34,20 +45,17 @@ oc get mlflow mlflow -n redhat-ods-applications -o jsonpath='{.status.url}{"\n"}
 
 Example: `https://<rhoai-dashboard-host>/mlflow`
 
-
 **Auth from a Ray job:** pass `MLFLOW_TRACKING_TOKEN` = your OpenShift **user** token and `MLFLOW_WORKSPACE` = `ray-workshop`.
 
 Do **not** rely on `MLFLOW_TRACKING_AUTH=kubernetes-namespaced` inside Ray workers. OpenShift AI’s gateway rejects Kubernetes service-account tokens for MLflow (known issue RHOAIENG-44516). The workshop passes the same Console token already used for CodeFlare.
 
 Also set `MLFLOW_TRACKING_INSECURE_TLS=true` on lab clusters with self-signed certs. SDK: `mlflow[kubernetes]>=3.11`.
 
-### What happens
+### What happens (MLflow details)
 
-`train_fashion_mnist.py` runs FashionMNIST on GPUs with Ray Train. The driver opens an MLflow run (params + tags). After each epoch, rank 0 runs `eval()` and logs `train_loss` / `train_accuracy` / `test_loss` / `test_accuracy`. At the end it logs final test metrics, per-class counts (`class_correct_*` / `class_accuracy_*`), artifacts `checkpoint.pt` and `confusion_matrix.csv`, and registers the model with `mlflow.pytorch.log_model`.
+After Train finishes, the driver/rank-0 path logs `train_*` / `test_*` metrics, per-class counts, artifacts `checkpoint.pt` and `confusion_matrix.csv`, and registers the model with `mlflow.pytorch.log_model`.
 
 **Checkpoint vs registered model:** `checkpoint.pt` is raw weights for resume/debug; the registered MLflow model is the promotion artifact.
-
-Serving the registered model (KServe) is out of scope — see [kserve-workshop](https://github.com/redhat-ai-americas/kserve-workshop).
 
 ### Demo talking points
 
